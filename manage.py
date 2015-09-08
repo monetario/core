@@ -1,14 +1,21 @@
 #!/usr/bin/env python
 import os
 from flask.ext.script import Manager, Shell
-from flask.ext.migrate import Migrate
+from flask.ext.migrate import Migrate, MigrateCommand
 
 from monetario.app import create_app
+from monetario.models import User
 from monetario.extensions import db
 
 app = create_app()
 manager = Manager(app)
 migrate = Migrate(app, db)
+
+def make_shell_context():
+    return {'app': app, 'db': db, 'User': User}
+
+manager.add_command("shell", Shell(make_context=make_shell_context))
+manager.add_command('db', MigrateCommand)
 
 
 @manager.command
