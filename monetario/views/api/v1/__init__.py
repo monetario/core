@@ -1,6 +1,12 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, url_for
 
-bp = Blueprint("api", __name__)
+bp = Blueprint("api.v1", __name__)
+
+
+def get_catalog():
+    return {
+        'currencies_url': url_for('api.v1.get_currencies', _external=True),
+    }
 
 
 class ValidationError(ValueError):
@@ -32,3 +38,5 @@ def validation_error(e):
 
 from . import auth
 from . import test_views
+from . import currency
+from . import discovery

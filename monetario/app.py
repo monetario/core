@@ -22,4 +22,5 @@ def create_app(config=Config):
 
 
 def configure_views(app):
-    app.register_blueprint(views.api_1_0.bp, url_prefix='/API/v1')
+    app.register_blueprint(views.api.bp, url_prefix='/API')
+    app.register_blueprint(views.api.v1.bp, url_prefix='/API/v1')
