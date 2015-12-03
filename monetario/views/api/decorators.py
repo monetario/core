@@ -10,7 +10,7 @@ def json(exclude=None):
         @functools.wraps(f)
         def wrapped(*args, **kwargs):
             rv = f(*args, **kwargs)
-            status_or_headers = {'Access-Control-Allow-Origin': '*'}
+            status_or_headers = {}
             headers = None
             if isinstance(rv, tuple):
                 rv, status_or_headers, headers = rv + (None,) * (3 - len(rv))
