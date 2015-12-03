@@ -1,0 +1,12 @@
+FROM python:3.5
+MAINTAINER Sergey Nuzhdin <ipaq.lw@gmail.com>
+
+VOLUME ['/opt/monetario/core']
+
+WORKDIR /opt/monetario/core
+
+ADD ./requirements-dev.txt /opt/requirements-core-dev.txt
+
+RUN pip install -r /opt/requirements-core-dev.txt
+
+EXPOSE 9000
