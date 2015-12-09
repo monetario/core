@@ -16,6 +16,17 @@ record_tag_table = db.Table(
 )
 
 
+class CurrencyRate(db.Model):
+    __tablename__ = 'currency_rate'
+
+    id = db.Column(db.Integer, primary_key=True)
+    base_currency = db.Column(db.Unicode(3), index=True)
+    currency = db.Column(db.Unicode(3), index=True)
+    rate = db.Column(db.Numeric(13, 4))
+    date_created = db.Column(db.DateTime, default=datetime.now)
+    date_modified = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
 class Tag(db.Model):
     __tablename__ = 'tag'
 
@@ -47,7 +58,7 @@ class User(db.Model):
 
     last_login = db.Column(db.DateTime, default=datetime.now)
     date_created = db.Column(db.DateTime, default=datetime.now)
-    date_modified = db.Column(db.DateTime, default=datetime.now)
+    date_modified = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     @property
     def password(self):
@@ -118,7 +129,7 @@ class GroupCurrency(db.Model):
     name = db.Column(db.String(255), index=True)
     symbol = db.Column(db.String(255), index=True)
     rate = db.Column(db.Integer)
-    date_modified = db.Column(db.DateTime, default=datetime.now, index=True)
+    date_modified = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, index=True)
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), index=True)
     group = db.relationship(Group, backref='currencies')
@@ -187,7 +198,7 @@ class Record(db.Model):
     ]
 
     id = db.Column(db.Integer, primary_key=True)
-    amount = db.Column(db.Float)
+    amount = db.Column(db.Numeric(13, 4))
     description = db.Column(db.Text, index=True)
     record_type = db.Column(db.Integer, default=CATEGORY_TYPE_OUTCOME)  # income or outcome
     payment_method = db.Column(
