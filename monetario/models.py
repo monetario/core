@@ -1,11 +1,13 @@
 from datetime import datetime
 
 from flask import current_app
+from flask import url_for
 
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .extensions import db
+from monetario.serializers import UserSchema
 
 
 record_tag_table = db.Table(
@@ -95,6 +97,21 @@ class User(db.Model):
 
         return User.query.get(data['id'])
 
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_user', user_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = UserSchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = UserSchema()
+        result = schema.load(data, partial=partial)
+        return result
+
     def __repr__(self):
         if self.first_name and self.last_name:
             return '{} {}'.format(self.first_name, self.last_name)
@@ -145,7 +162,7 @@ class Account(db.Model):
     name = db.Column(db.String(255), index=True)
 
     currency_id = db.Column(db.Integer, db.ForeignKey('group_currency.id'), index=True)
-    currency = db.relationship(GroupCurrency, backref='records')
+    currency = db.relationship(GroupCurrency, backref='accounts')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user = db.relationship(User, backref='accounts')
 
@@ -160,6 +177,7 @@ class GroupCategory(db.Model):
     name = db.Column(db.String(255), index=True)
     category_type = db.Column(db.Integer)  # income or outcome
     parent_id = db.Column(db.Integer, db.ForeignKey('group_category.id'), index=True)
+    children = db.relationship("GroupCategory", backref=db.backref('parent', remote_side=[id]))
     logo = db.Column(db.String(255), index=True)
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), index=True)
@@ -208,12 +226,15 @@ class Record(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user = db.relationship(User, backref='records')
+
     account_id = db.Column(db.Integer, db.ForeignKey('account.id'), index=True)
     account = db.relationship(Account, backref='records')
+
     currency_id = db.Column(db.Integer, db.ForeignKey('group_currency.id'), index=True)
     currency = db.relationship(GroupCurrency, backref='records')
+
     category_id = db.Column(db.Integer, db.ForeignKey('group_category.id'), index=True)
-    category = db.relationship(Category, backref='records')
+    category = db.relationship(GroupCategory, backref='records')
 
     tags = db.relationship('Tag', secondary=record_tag_table, backref=db.backref('records'))
 

@@ -5,11 +5,11 @@ import pycountry
 from flask import request
 
 from . import bp
-from ..decorators import json
+from ..decorators import jsonify
 
 
 @bp.route('/currencies/')
-@json()
+@jsonify()
 def get_currencies():
     def prepare_currency(currency):
         return {

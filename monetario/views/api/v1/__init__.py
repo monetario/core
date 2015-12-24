@@ -6,6 +6,7 @@ bp = Blueprint("api.v1", __name__)
 def get_catalog():
     return {
         'currencies_url': url_for('api.v1.get_currencies', _external=True),
+        'users_url': url_for('api.v1.get_users', _external=True),
     }
 
 
@@ -40,3 +41,4 @@ from . import auth
 from . import test_views
 from . import currency
 from . import discovery
+from . import users
