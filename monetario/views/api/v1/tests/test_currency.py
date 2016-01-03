@@ -1,3 +1,4 @@
+from flask import url_for
 from flask.ext.testing import TestCase
 
 from monetario.app import create_app
@@ -9,7 +10,7 @@ class CurrencyTest(TestCase):
         return app
 
     def test_get_currency_english(self):
-        response = self.client.get("/API/v1/currencies/")
+        response = self.client.get(url_for('api.v1.get_currencies'))
 
         self.assertEqual(response.json['currencies'][0]['symbol'], 'AED')
         self.assertEqual(response.json['currencies'][0]['name'], 'UAE Dirham')
@@ -20,7 +21,7 @@ class CurrencyTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_get_currency_russian(self):
-        response = self.client.get("/API/v1/currencies/?language=ru")
+        response = self.client.get(url_for('api.v1.get_currencies', language='ru'))
 
         self.assertEqual(response.json['currencies'][0]['symbol'], 'AED')
         self.assertEqual(response.json['currencies'][0]['name'], 'Дирхам (ОАЭ)')
@@ -31,7 +32,7 @@ class CurrencyTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_get_currency_ukrainian(self):
-        response = self.client.get("/API/v1/currencies/?language=uk")
+        response = self.client.get(url_for('api.v1.get_currencies', language='uk'))
 
         self.assertEqual(response.json['currencies'][0]['symbol'], 'AED')
         self.assertEqual(response.json['currencies'][0]['name'], 'Дірхам (ОАЕ)')

@@ -1,5 +1,6 @@
 import json
 
+from flask import url_for
 from flask.ext.testing import TestCase
 
 from monetario.app import create_app
@@ -37,7 +38,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_missing_first_name(self):
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({'email': 'test@gmail.com'}),
             content_type='application/json'
         )
@@ -51,7 +52,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_missing_email(self):
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({'first_name': 'Ivan'}),
             content_type='application/json'
         )
@@ -65,7 +66,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_missing_password(self):
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({'first_name': 'Ivan', 'email': 'ivan@gmail.com'}),
             content_type='application/json'
         )
@@ -79,7 +80,7 @@ class UsersTest(TestCase):
 
     def test_create_new_missing_group_id(self):
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -98,7 +99,7 @@ class UsersTest(TestCase):
 
     def test_create_new_incorrect_group_id(self):
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -118,7 +119,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_incorrect_email(self):
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({'email': 'Ivanmail'}),
             content_type='application/json'
         )
@@ -131,7 +132,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({'email': 'ivan@gmailcom'}),
             content_type='application/json'
         )
@@ -144,7 +145,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({'email': 'ivangmail.com'}),
             content_type='application/json'
         )
@@ -158,7 +159,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user(self):
         response = self.client.post(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -180,7 +181,7 @@ class UsersTest(TestCase):
 
     def test_update_incorrect_group_id(self):
         response = self.client.put(
-            "/API/v1/users/%s/" % self.users[0].id,
+            url_for('api.v1.get_user', user_id=self.users[0].id),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -200,7 +201,7 @@ class UsersTest(TestCase):
 
     def test_update_user_incorrect_email(self):
         response = self.client.put(
-            "/API/v1/users/%s/" % self.users[0].id,
+            url_for('api.v1.get_user', user_id=self.users[0].id),
             data=json.dumps({'email': 'Ivanmail'}),
             content_type='application/json'
         )
@@ -213,7 +214,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.put(
-            "/API/v1/users/%s/" % self.users[0].id,
+            url_for('api.v1.get_user', user_id=self.users[0].id),
             data=json.dumps({'email': 'ivan@gmailcom'}),
             content_type='application/json'
         )
@@ -226,7 +227,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.put(
-            "/API/v1/users/%s/" % self.users[0].id,
+            url_for('api.v1.get_user', user_id=self.users[0].id),
             data=json.dumps({'email': 'ivangmail.com'}),
             content_type='application/json'
         )
@@ -240,7 +241,7 @@ class UsersTest(TestCase):
 
     def test_update_user(self):
         response = self.client.put(
-            "/API/v1/users/%s/" % self.users[0].id,
+            url_for('api.v1.get_user', user_id=self.users[0].id),
             data=json.dumps({
                 'first_name': 'Oleg',
                 'last_name': 'Sidorov',
@@ -261,7 +262,7 @@ class UsersTest(TestCase):
 
     def test_get_user(self):
         response = self.client.get(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -282,7 +283,7 @@ class UsersTest(TestCase):
     def test_get_users(self):
         per_page = 10
         response = self.client.get(
-            "/API/v1/users/",
+            url_for('api.v1.get_users'),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -301,7 +302,7 @@ class UsersTest(TestCase):
     def test_get_users_five_per_page(self):
         per_page = 5
         response = self.client.get(
-            "/API/v1/users/?per_page=%d" % per_page,
+            url_for('api.v1.get_users', per_page=per_page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -322,7 +323,7 @@ class UsersTest(TestCase):
         page = 2
 
         response = self.client.get(
-            "/API/v1/users/?per_page=%d&page=%d" % (per_page, page),
+            url_for('api.v1.get_users', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -343,7 +344,7 @@ class UsersTest(TestCase):
         page = 10
 
         response = self.client.get(
-            "/API/v1/users/?per_page=%d&page=%d" % (per_page, page),
+            url_for('api.v1.get_users', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 404)
@@ -351,7 +352,7 @@ class UsersTest(TestCase):
         page = -9
 
         response = self.client.get(
-            "/API/v1/users/?per_page=%d&page=%d" % (per_page, page),
+            url_for('api.v1.get_users', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 404)
@@ -359,7 +360,7 @@ class UsersTest(TestCase):
         page = 0
 
         response = self.client.get(
-            "/API/v1/users/?per_page=%d&page=%d" % (per_page, page),
+            url_for('api.v1.get_users', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 404)
@@ -370,7 +371,7 @@ class UsersTest(TestCase):
         sort = 'first_name,asc'
 
         response = self.client.get(
-            "/API/v1/users/?expand=1&per_page=%d&page=%d&sort=%s" % (per_page, page, sort),
+            url_for('api.v1.get_users', per_page=per_page, page=page, sort=sort, expand=1),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -384,7 +385,7 @@ class UsersTest(TestCase):
 
         sort = 'first_name,desc'
         response = self.client.get(
-            "/API/v1/users/?expand=1&per_page=%d&page=%d&sort=%s" % (per_page, page, sort),
+            url_for('api.v1.get_users', per_page=per_page, page=page, sort=sort, expand=1),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
