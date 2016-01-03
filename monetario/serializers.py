@@ -8,6 +8,8 @@ class GroupSchema(Schema):
 
 class UserSchema(Schema):
     id = fields.Int(dump_only=True)
+    group = fields.Nested(GroupSchema, dump_only=True)
+    group_id = fields.Int(required=True, load_only=True)
     email = fields.Email(required=True)
     first_name = fields.Str(required=True)
     last_name = fields.Str()

@@ -4,6 +4,7 @@ import json
 from flask import request
 
 from monetario.models import db
+from monetario.models import Group
 from monetario.models import User
 
 from monetario.views.api.v1 import bp
@@ -44,6 +45,11 @@ def add_user():
     if user_schema.errors:
         return {'errors': user_schema.errors}, 400
 
+    group = Group.query.filter(Group.id == user_schema.data['group_id']).first()
+    if not group:
+        return {'errors': {'group_id': 'Group with this id does not exist'}}, 400
+
+
     email_duplicate_user = User.query.filter(User.email == user_schema.data['email']).first()
 
     if email_duplicate_user:
@@ -65,6 +71,11 @@ def edit_user(user_id):
 
     if user_schema.errors:
         return {'errors': user_schema.errors}, 400
+
+    if 'group_id' in user_schema.data:
+        group = Group.query.filter(Group.id == user_schema.data['group_id']).first()
+        if not group:
+            return {'errors': {'group_id': 'Group with this id does not exist'}}, 400
 
     if 'email' in user_schema.data:
         email_duplicate_user = User.query.filter(User.email == user_schema.data['email']).first()

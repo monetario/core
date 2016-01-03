@@ -5,6 +5,7 @@ from flask.ext.testing import TestCase
 from monetario.app import create_app
 from monetario.app import db
 
+from monetario.views.api.v1.tests.fixtures import GroupFactory
 from monetario.views.api.v1.tests.fixtures import UserFactory
 
 
@@ -14,10 +15,14 @@ class UsersTest(TestCase):
 
     def setUp(self):
         db.create_all()
-        self.users = []
-        self.users.extend(UserFactory.create_batch(30))
+
+        self.group = GroupFactory.create()
+        db.session.add(self.group)
+
+        self.users = UserFactory.create_batch(30)
         for user in self.users:
             db.session.add(user)
+
         db.session.commit()
 
     def tearDown(self):
@@ -72,6 +77,45 @@ class UsersTest(TestCase):
         self.assertIn('password', data['errors'])
         self.assertIn('Missing data for required field.', data['errors']['password'])
 
+    def test_create_new_missing_group_id(self):
+        response = self.client.post(
+            "/API/v1/users/",
+            data=json.dumps({
+                'first_name': 'Ivan',
+                'last_name': 'Petrov',
+                'email': 'ivan@gmail.com',
+                'password': '111'
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('group_id', data['errors'])
+        self.assertIn('Missing data for required field.', data['errors']['group_id'])
+
+    def test_create_new_incorrect_group_id(self):
+        response = self.client.post(
+            "/API/v1/users/",
+            data=json.dumps({
+                'first_name': 'Ivan',
+                'last_name': 'Petrov',
+                'email': 'ivan@gmail.com',
+                'password': '111',
+                'group_id': self.group.id * 100
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('group_id', data['errors'])
+        self.assertIn('Group with this id does not exist', data['errors']['group_id'])
+
     def test_create_new_user_incorrect_email(self):
         response = self.client.post(
             "/API/v1/users/",
@@ -119,7 +163,8 @@ class UsersTest(TestCase):
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
                 'email': 'ivan@gmail.com',
-                'password': '111'
+                'password': '111',
+                'group_id': self.group.id
             }),
             content_type='application/json'
         )
@@ -131,6 +176,87 @@ class UsersTest(TestCase):
         self.assertEqual(data['email'], 'ivan@gmail.com')
         self.assertEqual(data['first_name'], 'Ivan')
         self.assertEqual(data['last_name'], 'Petrov')
+        self.assertNotIn('password', data)
+
+    def test_update_incorrect_group_id(self):
+        response = self.client.put(
+            "/API/v1/users/%s/" % self.users[0].id,
+            data=json.dumps({
+                'first_name': 'Ivan',
+                'last_name': 'Petrov',
+                'email': 'ivan@gmail.com',
+                'password': '111',
+                'group_id': self.group.id * 100
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('group_id', data['errors'])
+        self.assertIn('Group with this id does not exist', data['errors']['group_id'])
+
+    def test_update_user_incorrect_email(self):
+        response = self.client.put(
+            "/API/v1/users/%s/" % self.users[0].id,
+            data=json.dumps({'email': 'Ivanmail'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('email', data['errors'])
+        self.assertIn('Not a valid email address.', data['errors']['email'])
+
+        response = self.client.put(
+            "/API/v1/users/%s/" % self.users[0].id,
+            data=json.dumps({'email': 'ivan@gmailcom'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('email', data['errors'])
+        self.assertIn('Not a valid email address.', data['errors']['email'])
+
+        response = self.client.put(
+            "/API/v1/users/%s/" % self.users[0].id,
+            data=json.dumps({'email': 'ivangmail.com'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('email', data['errors'])
+        self.assertIn('Not a valid email address.', data['errors']['email'])
+
+    def test_update_user(self):
+        response = self.client.put(
+            "/API/v1/users/%s/" % self.users[0].id,
+            data=json.dumps({
+                'first_name': 'Oleg',
+                'last_name': 'Sidorov',
+                'email': 'oleg.sidirov@gmail.com',
+                'password': '111'
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('email', data)
+        self.assertEqual(data['email'], 'oleg.sidirov@gmail.com')
+        self.assertEqual(data['first_name'], 'Oleg')
+        self.assertEqual(data['last_name'], 'Sidorov')
         self.assertNotIn('password', data)
 
     def test_get_user(self):
