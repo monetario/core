@@ -43,3 +43,4 @@ from . import currency
 from . import discovery
 from . import users
 from . import groups
+from . import categories

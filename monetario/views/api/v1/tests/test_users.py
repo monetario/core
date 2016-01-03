@@ -78,7 +78,7 @@ class UsersTest(TestCase):
         self.assertIn('password', data['errors'])
         self.assertIn('Missing data for required field.', data['errors']['password'])
 
-    def test_create_new_missing_group_id(self):
+    def test_create_new_missing_group(self):
         response = self.client.post(
             url_for('api.v1.get_users'),
             data=json.dumps({
@@ -94,10 +94,10 @@ class UsersTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))
 
         self.assertIn('errors', data)
-        self.assertIn('group_id', data['errors'])
-        self.assertIn('Missing data for required field.', data['errors']['group_id'])
+        self.assertIn('group', data['errors'])
+        self.assertIn('Missing data for required field.', data['errors']['group'])
 
-    def test_create_new_incorrect_group_id(self):
+    def test_create_new_incorrect_group(self):
         response = self.client.post(
             url_for('api.v1.get_users'),
             data=json.dumps({
@@ -105,7 +105,7 @@ class UsersTest(TestCase):
                 'last_name': 'Petrov',
                 'email': 'ivan@gmail.com',
                 'password': '111',
-                'group_id': self.group.id * 100
+                'group': self.group.id * 100
             }),
             content_type='application/json'
         )
@@ -114,8 +114,8 @@ class UsersTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))
 
         self.assertIn('errors', data)
-        self.assertIn('group_id', data['errors'])
-        self.assertIn('Group with this id does not exist', data['errors']['group_id'])
+        self.assertIn('group', data['errors'])
+        self.assertIn('Group with this id does not exist', data['errors']['group'])
 
     def test_create_new_user_incorrect_email(self):
         response = self.client.post(
@@ -165,7 +165,7 @@ class UsersTest(TestCase):
                 'last_name': 'Petrov',
                 'email': 'ivan@gmail.com',
                 'password': '111',
-                'group_id': self.group.id
+                'group': self.group.id
             }),
             content_type='application/json'
         )
@@ -179,7 +179,7 @@ class UsersTest(TestCase):
         self.assertEqual(data['last_name'], 'Petrov')
         self.assertNotIn('password', data)
 
-    def test_update_incorrect_group_id(self):
+    def test_update_incorrect_group(self):
         response = self.client.put(
             url_for('api.v1.get_user', user_id=self.users[0].id),
             data=json.dumps({
@@ -187,7 +187,7 @@ class UsersTest(TestCase):
                 'last_name': 'Petrov',
                 'email': 'ivan@gmail.com',
                 'password': '111',
-                'group_id': self.group.id * 100
+                'group': self.group.id * 1000
             }),
             content_type='application/json'
         )
@@ -196,8 +196,8 @@ class UsersTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))
 
         self.assertIn('errors', data)
-        self.assertIn('group_id', data['errors'])
-        self.assertIn('Group with this id does not exist', data['errors']['group_id'])
+        self.assertIn('group', data['errors'])
+        self.assertIn('Group with this id does not exist', data['errors']['group'])
 
     def test_update_user_incorrect_email(self):
         response = self.client.put(
@@ -259,6 +259,14 @@ class UsersTest(TestCase):
         self.assertEqual(data['first_name'], 'Oleg')
         self.assertEqual(data['last_name'], 'Sidorov')
         self.assertNotIn('password', data)
+
+    def test_delete_user(self):
+        url = url_for('api.v1.get_user', user_id=self.users[0].id)
+        response = self.client.delete(url, content_type='application/json')
+        self.assertEqual(response.status_code, 204)
+
+        response = self.client.delete(url, content_type='application/json')
+        self.assertEqual(response.status_code, 404)
 
     def test_get_user(self):
         response = self.client.get(

@@ -6,19 +6,19 @@ from flask.ext.testing import TestCase
 from monetario.app import create_app
 from monetario.app import db
 
-from monetario.views.api.v1.tests.fixtures import GroupFactory
+from monetario.views.api.v1.tests.fixtures import CategoryFactory
 
 
-class GroupsTest(TestCase):
+class CategoriesTest(TestCase):
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     TESTING = True
 
     def setUp(self):
         db.create_all()
-        self.groups = []
-        self.groups.extend(GroupFactory.create_batch(30))
-        for group in self.groups:
-            db.session.add(group)
+        self.categories = []
+        self.categories.extend(CategoryFactory.create_batch(30))
+        for category in self.categories:
+            db.session.add(category)
         db.session.commit()
 
     def tearDown(self):
@@ -31,9 +31,9 @@ class GroupsTest(TestCase):
         app.config['TESTING'] = True
         return app
 
-    def test_create_new_group_missing_name(self):
+    def test_create_new_category_missing_name(self):
         response = self.client.post(
-            url_for('api.v1.get_groups'),
+            url_for('api.v1.get_categories'),
             data=json.dumps({}),
             content_type='application/json'
         )
@@ -45,12 +45,29 @@ class GroupsTest(TestCase):
         self.assertIn('name', data['errors'])
         self.assertIn('Missing data for required field.', data['errors']['name'])
 
-    def test_create_new_group(self):
+    def test_create_new_category_wrong_parent(self):
         response = self.client.post(
-            url_for('api.v1.get_groups'),
+            url_for('api.v1.get_categories'),
+            data=json.dumps({
+                'name': 'Subcategory 1',
+                'parent': self.categories[-1].id + 100
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('parent', data['errors'])
+        self.assertIn('Parent category with this id does not exist', data['errors']['parent'])
+
+    def test_create_new_category(self):
+        response = self.client.post(
+            url_for('api.v1.get_categories'),
             data=json.dumps({
                 'name': 'Smiths',
-
+                'parent': self.categories[0].id
             }),
             content_type='application/json'
         )
@@ -60,13 +77,32 @@ class GroupsTest(TestCase):
 
         self.assertIn('name', data)
         self.assertEqual(data['name'], 'Smiths')
+        self.assertEqual(data['parent']['id'], self.categories[0].id)
+        self.assertEqual(data['parent']['name'], self.categories[0].name)
 
-    def test_update_group(self):
+    def test_update_category_wrong_parent(self):
         response = self.client.put(
-            url_for('api.v1.get_group', group_id=self.groups[0].id),
+            url_for('api.v1.get_category', category_id=self.categories[1].id),
             data=json.dumps({
-                'id': self.groups[0].id,
-                'name': 'Work',
+                'name': 'Transport',
+                'parent': self.categories[-1].id + 100
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('parent', data['errors'])
+        self.assertIn('Parent category with this id does not exist', data['errors']['parent'])
+
+    def test_update_category(self):
+        response = self.client.put(
+            url_for('api.v1.get_category', category_id=self.categories[1].id),
+            data=json.dumps({
+                'name': 'Groceries',
+                'parent': self.categories[0].id
             }),
             content_type='application/json'
         )
@@ -75,19 +111,21 @@ class GroupsTest(TestCase):
         data = json.loads(response.data.decode('utf-8'))
 
         self.assertIn('name', data)
-        self.assertEqual(data['name'], 'Work')
+        self.assertEqual(data['name'], 'Groceries')
+        self.assertEqual(data['parent']['id'], self.categories[0].id)
+        self.assertEqual(data['parent']['name'], self.categories[0].name)
 
-    def test_delete_group(self):
-        url = url_for('api.v1.get_group', group_id=self.groups[0].id)
+    def test_delete_category(self):
+        url = url_for('api.v1.get_category', category_id=self.categories[0].id)
         response = self.client.delete(url, content_type='application/json')
         self.assertEqual(response.status_code, 204)
 
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.get(url, content_type='application/json')
         self.assertEqual(response.status_code, 404)
 
-    def test_get_group(self):
+    def test_get_category(self):
         response = self.client.get(
-            url_for('api.v1.get_groups'),
+            url_for('api.v1.get_categories'),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -100,12 +138,12 @@ class GroupsTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
-        self.assertEqual(data['name'], self.groups[0].name)
+        self.assertEqual(data['name'], self.categories[0].name)
 
-    def test_get_groups(self):
+    def test_get_categories(self):
         per_page = 10
         response = self.client.get(
-            url_for('api.v1.get_groups'),
+            url_for('api.v1.get_categories'),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -114,17 +152,17 @@ class GroupsTest(TestCase):
 
         self.assertIn('meta', data)
         self.assertEqual(data['meta']['page'], 1)
-        self.assertEqual(data['meta']['total'], len(self.groups))
-        self.assertEqual(data['meta']['pages'], len(self.groups) / per_page)
+        self.assertEqual(data['meta']['total'], len(self.categories))
+        self.assertEqual(data['meta']['pages'], len(self.categories) / per_page)
         self.assertEqual(data['meta']['per_page'], per_page)
 
         self.assertIn('objects', data)
         self.assertEqual(len(data['objects']), per_page)
 
-    def test_get_groups_five_per_page(self):
+    def test_get_categories_five_per_page(self):
         per_page = 5
         response = self.client.get(
-            url_for('api.v1.get_groups', per_page=per_page),
+            url_for('api.v1.get_categories', per_page=per_page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -133,19 +171,19 @@ class GroupsTest(TestCase):
 
         self.assertIn('meta', data)
         self.assertEqual(data['meta']['page'], 1)
-        self.assertEqual(data['meta']['total'], len(self.groups))
-        self.assertEqual(data['meta']['pages'], len(self.groups) / per_page)
+        self.assertEqual(data['meta']['total'], len(self.categories))
+        self.assertEqual(data['meta']['pages'], len(self.categories) / per_page)
         self.assertEqual(data['meta']['per_page'], per_page)
 
         self.assertIn('objects', data)
         self.assertEqual(len(data['objects']), per_page)
 
-    def test_get_groups_pagination(self):
+    def test_get_categories_pagination(self):
         per_page = 10
         page = 2
 
         response = self.client.get(
-            url_for('api.v1.get_groups', per_page=per_page, page=page),
+            url_for('api.v1.get_categories', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -154,19 +192,19 @@ class GroupsTest(TestCase):
 
         self.assertIn('meta', data)
         self.assertEqual(data['meta']['page'], page)
-        self.assertEqual(data['meta']['total'], len(self.groups))
-        self.assertEqual(data['meta']['pages'], len(self.groups) / per_page)
+        self.assertEqual(data['meta']['total'], len(self.categories))
+        self.assertEqual(data['meta']['pages'], len(self.categories) / per_page)
         self.assertEqual(data['meta']['per_page'], per_page)
 
         self.assertIn('objects', data)
         self.assertEqual(len(data['objects']), per_page)
 
-    def test_get_groups_wrong_page(self):
+    def test_get_categories_wrong_page(self):
         per_page = 10
         page = 10
 
         response = self.client.get(
-            url_for('api.v1.get_groups', per_page=per_page, page=page),
+            url_for('api.v1.get_categories', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 404)
@@ -174,7 +212,7 @@ class GroupsTest(TestCase):
         page = -9
 
         response = self.client.get(
-            url_for('api.v1.get_groups', per_page=per_page, page=page),
+            url_for('api.v1.get_categories', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 404)
@@ -182,18 +220,18 @@ class GroupsTest(TestCase):
         page = 0
 
         response = self.client.get(
-            url_for('api.v1.get_groups', per_page=per_page, page=page),
+            url_for('api.v1.get_categories', per_page=per_page, page=page),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 404)
 
-    def test_get_groups_sorting(self):
+    def test_get_categories_sorting(self):
         per_page = 5
         page = 1
         sort = 'name,asc'
 
         response = self.client.get(
-            url_for('api.v1.get_groups', per_page=per_page, page=page, sort=sort, expand=1),
+            url_for('api.v1.get_categories', per_page=per_page, page=page, sort=sort, expand=1),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -202,12 +240,12 @@ class GroupsTest(TestCase):
 
         self.assertSequenceEqual(
             [x['name'] for x in data['objects']],
-            [x.name for x in self.groups[:5]]
+            [x.name for x in self.categories[:5]]
         )
 
         sort = 'name,desc'
         response = self.client.get(
-            url_for('api.v1.get_groups', per_page=per_page, page=page, sort=sort, expand=1),
+            url_for('api.v1.get_categories', per_page=per_page, page=page, sort=sort, expand=1),
             content_type='application/json'
         )
         self.assertEqual(response.status_code, 200)
@@ -216,5 +254,5 @@ class GroupsTest(TestCase):
 
         self.assertSequenceEqual(
             [x['name'] for x in data['objects']],
-            sorted([x.name for x in self.groups[-5:]], reverse=True)
+            sorted([x.name for x in self.categories[-5:]], reverse=True)
         )

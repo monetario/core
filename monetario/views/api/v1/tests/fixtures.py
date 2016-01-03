@@ -2,6 +2,7 @@ import factory
 
 from monetario.models import Group
 from monetario.models import User
+from monetario.models import Category
 
 
 class GroupFactory(factory.Factory):
@@ -18,3 +19,10 @@ class UserFactory(factory.Factory):
     first_name = factory.Sequence(lambda n: 'user_%s' % n)
     email = factory.LazyAttribute(lambda obj: '%s@example.com' % obj.first_name)
     password = '111'
+
+
+class CategoryFactory(factory.Factory):
+    class Meta:
+        model = Category
+
+    name = factory.Sequence(lambda n: 'category_%s' % n)

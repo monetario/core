@@ -47,8 +47,7 @@ def add_user():
 
     group = Group.query.filter(Group.id == user_schema.data['group_id']).first()
     if not group:
-        return {'errors': {'group_id': 'Group with this id does not exist'}}, 400
-
+        return {'errors': {'group': 'Group with this id does not exist'}}, 400
 
     email_duplicate_user = User.query.filter(User.email == user_schema.data['email']).first()
 
@@ -75,7 +74,7 @@ def edit_user(user_id):
     if 'group_id' in user_schema.data:
         group = Group.query.filter(Group.id == user_schema.data['group_id']).first()
         if not group:
-            return {'errors': {'group_id': 'Group with this id does not exist'}}, 400
+            return {'errors': {'group': 'Group with this id does not exist'}}, 400
 
     if 'email' in user_schema.data:
         email_duplicate_user = User.query.filter(User.email == user_schema.data['email']).first()

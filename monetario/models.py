@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db
 from monetario.serializers import GroupSchema
 from monetario.serializers import UserSchema
+from monetario.serializers import CategorySchema
 
 
 record_tag_table = db.Table(
@@ -152,10 +153,26 @@ class Category(db.Model):
     name = db.Column(db.String(255), index=True)
     category_type = db.Column(db.Integer, default=CATEGORY_TYPE_OUTCOME)  # income or outcome
     parent_id = db.Column(db.Integer, db.ForeignKey('category.id'), index=True)
+    parent = db.relationship('Category', remote_side=[id])
     logo = db.Column(db.String(255), index=True)
 
     def __repr__(self):
         return self.name
+
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_category', category_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = CategorySchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = CategorySchema()
+        result = schema.load(data, partial=partial)
+        return result
 
 
 class GroupCurrency(db.Model):
