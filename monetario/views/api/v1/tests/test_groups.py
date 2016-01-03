@@ -60,6 +60,22 @@ class GroupsTest(TestCase):
         self.assertIn('name', data)
         self.assertEqual(data['name'], 'Smiths')
 
+    def test_update_group(self):
+        response = self.client.put(
+            "/API/v1/groups/%s/" % self.groups[0].id,
+            data=json.dumps({
+                'id': self.groups[0].id,
+                'name': 'Work',
+            }),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('name', data)
+        self.assertEqual(data['name'], 'Work')
+
     def test_get_group(self):
         response = self.client.get(
             "/API/v1/groups/",
