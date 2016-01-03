@@ -11,6 +11,7 @@ from monetario.serializers import GroupSchema
 from monetario.serializers import UserSchema
 from monetario.serializers import CategorySchema
 from monetario.serializers import GroupCategorySchema
+from monetario.serializers import GroupCurrencySchema
 
 
 record_tag_table = db.Table(
@@ -202,7 +203,7 @@ class GroupCategory(db.Model):
         return url_for('api.v1.get_group_category', group_category_id=self.id, _external=True)
 
     def to_json(self, exclude=None):
-        schema = CategorySchema()
+        schema = GroupCategorySchema()
         result = schema.dump(self)
         return result
 
@@ -218,8 +219,9 @@ class GroupCurrency(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True)
-    symbol = db.Column(db.String(255), index=True)
+    symbol = db.Column(db.String(3), index=True)
     rate = db.Column(db.Integer)
+    # rate = db.Column(db.Numeric(13, 4))
     date_modified = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, index=True)
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), index=True)
@@ -227,6 +229,21 @@ class GroupCurrency(db.Model):
 
     def __repr__(self):
         return self.symbol
+
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_group_currency', group_currency_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = GroupCurrencySchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = GroupCurrencySchema()
+        result = schema.load(data, partial=partial)
+        return result
 
 
 class Account(db.Model):

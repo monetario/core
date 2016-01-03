@@ -4,6 +4,7 @@ import json
 from flask import request
 
 from monetario.models import db
+from monetario.models import Group
 from monetario.models import GroupCategory
 
 from monetario.views.api.v1 import bp
@@ -44,8 +45,8 @@ def add_group_category():
     if group_category_schema.errors:
         return {'errors': group_category_schema.errors}, 400
 
-    group = GroupCategory.query.filter(
-        GroupCategory.id == group_category_schema.data['group_id']
+    group = Group.query.filter(
+        Group.id == group_category_schema.data['group_id']
     ).first()
 
     if not group:
@@ -78,12 +79,13 @@ def edit_group_category(group_category_id):
         return {'errors': group_category_schema.errors}, 400
 
     if 'group_id' in group_category_schema.data:
-        group = GroupCategory.query.filter(
-            GroupCategory.id == group_category_schema.data['group_id']
+        group = Group.query.filter(
+            Group.id == group_category_schema.data['group_id']
         ).first()
 
         if not group:
             return {'errors': {'group': 'Group with this id does not exist'}}, 400
+
     if 'parent_id' in group_category_schema.data:
         parent = GroupCategory.query.filter(
             GroupCategory.id == group_category_schema.data['parent_id']

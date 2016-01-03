@@ -1,9 +1,14 @@
+from random import choice
+from string import ascii_uppercase
+
 import factory
+import pycountry
 
 from monetario.models import Group
 from monetario.models import User
 from monetario.models import Category
 from monetario.models import GroupCategory
+from monetario.models import GroupCurrency
 
 
 class GroupFactory(factory.Factory):
@@ -34,3 +39,11 @@ class GroupCategorySchema(factory.Factory):
         model = GroupCategory
 
     name = factory.Sequence(lambda n: 'category_%s' % n)
+
+
+class GroupCurrencySchema(factory.Factory):
+    class Meta:
+        model = GroupCurrency
+
+    symbol = factory.Sequence(lambda n: choice(pycountry.currencies.objects).letter)
+    name = factory.LazyAttribute(lambda obj: obj.symbol)

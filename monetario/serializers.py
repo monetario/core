@@ -1,4 +1,6 @@
-from marshmallow import Schema, fields
+import pycountry
+
+from marshmallow import Schema, fields, ValidationError
 
 
 class CategoryType(fields.Field):
@@ -46,3 +48,21 @@ class GroupCategorySchema(Schema):
 
     parent = fields.Nested('self', dump_only=True, exclude=('parent', ))
     parent_id = fields.Int(load_only=True, load_from='parent')
+
+
+def validate_currency_symbol(val):
+    if val not in [x.letter for x in pycountry.currencies.objects]:
+        raise ValidationError('Symbol is not valid')
+
+
+class GroupCurrencySchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True)
+    symbol = fields.Str(
+        required=True,
+        validate=validate_currency_symbol
+    )
+    date_modified = fields.DateTime()
+
+    group = fields.Nested(GroupSchema, dump_only=True)
+    group_id = fields.Int(required=True, load_only=True, load_from='group')
