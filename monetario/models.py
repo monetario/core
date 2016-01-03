@@ -10,6 +10,7 @@ from .extensions import db
 from monetario.serializers import GroupSchema
 from monetario.serializers import UserSchema
 from monetario.serializers import CategorySchema
+from monetario.serializers import GroupCategorySchema
 
 
 record_tag_table = db.Table(
@@ -175,6 +176,43 @@ class Category(db.Model):
         return result
 
 
+class GroupCategory(db.Model):
+    __tablename__ = 'group_category'
+
+    CATEGORY_TYPE_INCOME = Category.CATEGORY_TYPE_INCOME
+    CATEGORY_TYPE_OUTCOME = Category.CATEGORY_TYPE_OUTCOME
+    CATEGORY_TYPES = Category.CATEGORY_TYPES
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), index=True)
+    category_type = db.Column(db.Integer)  # income or outcome
+    parent_id = db.Column(db.Integer, db.ForeignKey('group_category.id'), index=True)
+    parent = db.relationship('GroupCategory', remote_side=[id])
+
+    logo = db.Column(db.String(255), index=True)
+
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), index=True)
+    group = db.relationship(Group, backref='categories')
+
+    def __repr__(self):
+        return self.name
+
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_group_category', group_category_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = CategorySchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = GroupCategorySchema()
+        result = schema.load(data, partial=partial)
+        return result
+
+
 class GroupCurrency(db.Model):
     __tablename__ = 'group_currency'
 
@@ -201,23 +239,6 @@ class Account(db.Model):
     currency = db.relationship(GroupCurrency, backref='accounts')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user = db.relationship(User, backref='accounts')
-
-    def __repr__(self):
-        return self.name
-
-
-class GroupCategory(db.Model):
-    __tablename__ = 'group_category'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), index=True)
-    category_type = db.Column(db.Integer)  # income or outcome
-    parent_id = db.Column(db.Integer, db.ForeignKey('group_category.id'), index=True)
-    children = db.relationship("GroupCategory", backref=db.backref('parent', remote_side=[id]))
-    logo = db.Column(db.String(255), index=True)
-
-    group_id = db.Column(db.Integer, db.ForeignKey('group.id'), index=True)
-    group = db.relationship(Group, backref='categories')
 
     def __repr__(self):
         return self.name

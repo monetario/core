@@ -3,6 +3,7 @@ import factory
 from monetario.models import Group
 from monetario.models import User
 from monetario.models import Category
+from monetario.models import GroupCategory
 
 
 class GroupFactory(factory.Factory):
@@ -24,5 +25,12 @@ class UserFactory(factory.Factory):
 class CategoryFactory(factory.Factory):
     class Meta:
         model = Category
+
+    name = factory.Sequence(lambda n: 'category_%s' % n)
+
+
+class GroupCategorySchema(factory.Factory):
+    class Meta:
+        model = GroupCategory
 
     name = factory.Sequence(lambda n: 'category_%s' % n)

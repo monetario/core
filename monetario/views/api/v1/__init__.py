@@ -44,3 +44,4 @@ from . import discovery
 from . import users
 from . import groups
 from . import categories
+from . import group_categories
