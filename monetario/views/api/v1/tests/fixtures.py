@@ -1,6 +1,14 @@
 import factory
 
+from monetario.models import Group
 from monetario.models import User
+
+
+class GroupFactory(factory.Factory):
+    class Meta:
+        model = Group
+
+    name = factory.Sequence(lambda n: 'group_%s' % n)
 
 
 class UserFactory(factory.Factory):

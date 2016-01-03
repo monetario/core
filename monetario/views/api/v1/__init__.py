@@ -42,3 +42,4 @@ from . import test_views
 from . import currency
 from . import discovery
 from . import users
+from . import groups

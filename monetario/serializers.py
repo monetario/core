@@ -1,6 +1,11 @@
 from marshmallow import Schema, fields
 
 
+class GroupSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True)
+
+
 class UserSchema(Schema):
     id = fields.Int(dump_only=True)
     email = fields.Email(required=True)

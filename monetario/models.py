@@ -7,6 +7,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .extensions import db
+from monetario.serializers import GroupSchema
 from monetario.serializers import UserSchema
 
 
@@ -41,6 +42,24 @@ class Group(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256))
+
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_group', group_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = GroupSchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = GroupSchema()
+        result = schema.load(data, partial=partial)
+        return result
+
+    def __repr__(self):
+        return self.name
 
 
 class User(db.Model):
