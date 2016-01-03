@@ -33,7 +33,7 @@ class CategoriesTest(TestCase):
 
     def test_create_new_category_missing_name(self):
         response = self.client.post(
-            url_for('api.v1.get_categories'),
+            url_for('api.v1.add_category'),
             data=json.dumps({}),
             content_type='application/json'
         )
@@ -47,7 +47,7 @@ class CategoriesTest(TestCase):
 
     def test_create_new_category_wrong_parent(self):
         response = self.client.post(
-            url_for('api.v1.get_categories'),
+            url_for('api.v1.add_category'),
             data=json.dumps({
                 'name': 'Subcategory 1',
                 'parent': self.categories[-1].id + 100
@@ -64,7 +64,7 @@ class CategoriesTest(TestCase):
 
     def test_create_new_category(self):
         response = self.client.post(
-            url_for('api.v1.get_categories'),
+            url_for('api.v1.add_category'),
             data=json.dumps({
                 'name': 'Smiths',
                 'parent': self.categories[0].id
@@ -82,7 +82,7 @@ class CategoriesTest(TestCase):
 
     def test_update_category_wrong_parent(self):
         response = self.client.put(
-            url_for('api.v1.get_category', category_id=self.categories[1].id),
+            url_for('api.v1.edit_category', category_id=self.categories[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'parent': self.categories[-1].id + 100
@@ -99,7 +99,7 @@ class CategoriesTest(TestCase):
 
     def test_update_category(self):
         response = self.client.put(
-            url_for('api.v1.get_category', category_id=self.categories[1].id),
+            url_for('api.v1.edit_category', category_id=self.categories[1].id),
             data=json.dumps({
                 'name': 'Groceries',
                 'parent': self.categories[0].id
@@ -116,7 +116,7 @@ class CategoriesTest(TestCase):
         self.assertEqual(data['parent']['name'], self.categories[0].name)
 
     def test_delete_category(self):
-        url = url_for('api.v1.get_category', category_id=self.categories[0].id)
+        url = url_for('api.v1.delete_category', category_id=self.categories[0].id)
         response = self.client.delete(url, content_type='application/json')
         self.assertEqual(response.status_code, 204)
 

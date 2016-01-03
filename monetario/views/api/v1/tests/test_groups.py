@@ -33,7 +33,7 @@ class GroupsTest(TestCase):
 
     def test_create_new_group_missing_name(self):
         response = self.client.post(
-            url_for('api.v1.get_groups'),
+            url_for('api.v1.add_group'),
             data=json.dumps({}),
             content_type='application/json'
         )
@@ -47,7 +47,7 @@ class GroupsTest(TestCase):
 
     def test_create_new_group(self):
         response = self.client.post(
-            url_for('api.v1.get_groups'),
+            url_for('api.v1.add_group'),
             data=json.dumps({
                 'name': 'Smiths',
 
@@ -63,7 +63,7 @@ class GroupsTest(TestCase):
 
     def test_update_group(self):
         response = self.client.put(
-            url_for('api.v1.get_group', group_id=self.groups[0].id),
+            url_for('api.v1.edit_group', group_id=self.groups[0].id),
             data=json.dumps({
                 'id': self.groups[0].id,
                 'name': 'Work',
@@ -78,7 +78,7 @@ class GroupsTest(TestCase):
         self.assertEqual(data['name'], 'Work')
 
     def test_delete_group(self):
-        url = url_for('api.v1.get_group', group_id=self.groups[0].id)
+        url = url_for('api.v1.delete_group', group_id=self.groups[0].id)
         response = self.client.delete(url, content_type='application/json')
         self.assertEqual(response.status_code, 204)
 

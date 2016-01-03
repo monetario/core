@@ -41,7 +41,7 @@ class AccountsTest(TestCase):
 
     def test_create_new_account_missing_name(self):
         response = self.client.post(
-            url_for('api.v1.get_accounts'),
+            url_for('api.v1.add_account'),
             data=json.dumps({}),
             content_type='application/json'
         )
@@ -55,7 +55,7 @@ class AccountsTest(TestCase):
 
     def test_create_new_account_wrong_currency(self):
         response = self.client.post(
-            url_for('api.v1.get_accounts'),
+            url_for('api.v1.add_account'),
             data=json.dumps({
                 'name': 'Subaccount 1',
                 'currency': self.currency.id + 100,
@@ -73,7 +73,7 @@ class AccountsTest(TestCase):
 
     def test_create_new_account_wrong_user(self):
         response = self.client.post(
-            url_for('api.v1.get_accounts'),
+            url_for('api.v1.add_account'),
             data=json.dumps({
                 'name': 'Subaccount 1',
                 'currency': self.currency.id,
@@ -91,7 +91,7 @@ class AccountsTest(TestCase):
 
     def test_create_new_account(self):
         response = self.client.post(
-            url_for('api.v1.get_accounts'),
+            url_for('api.v1.add_account'),
             data=json.dumps({
                 'name': 'Smiths',
                 'currency': self.currency.id,
@@ -109,7 +109,7 @@ class AccountsTest(TestCase):
 
     def test_update_account_wrong_currency(self):
         response = self.client.put(
-            url_for('api.v1.get_account', account_id=self.accounts[1].id),
+            url_for('api.v1.edit_account', account_id=self.accounts[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'currency': self.currency.id + 100,
@@ -127,7 +127,7 @@ class AccountsTest(TestCase):
 
     def test_update_account_wrong_user(self):
         response = self.client.put(
-            url_for('api.v1.get_account', account_id=self.accounts[1].id),
+            url_for('api.v1.edit_account', account_id=self.accounts[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'currency': self.currency.id,
@@ -145,7 +145,7 @@ class AccountsTest(TestCase):
 
     def test_update_account(self):
         response = self.client.put(
-            url_for('api.v1.get_account', account_id=self.accounts[1].id),
+            url_for('api.v1.edit_account', account_id=self.accounts[1].id),
             data=json.dumps({
                 'name': 'Groceries',
                 'currency': self.currency.id,
@@ -162,7 +162,7 @@ class AccountsTest(TestCase):
         self.assertEqual(data['currency']['id'], self.currency.id)
 
     def test_delete_account(self):
-        url = url_for('api.v1.get_account', account_id=self.accounts[0].id)
+        url = url_for('api.v1.delete_account', account_id=self.accounts[0].id)
         response = self.client.delete(url, content_type='application/json')
         self.assertEqual(response.status_code, 204)
 

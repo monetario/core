@@ -10,7 +10,7 @@ from monetario.views.api.v1.tests.fixtures import GroupFactory
 from monetario.views.api.v1.tests.fixtures import GroupCategoryFactory
 
 
-class CategoriesTest(TestCase):
+class GroupCategoriesTest(TestCase):
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     TESTING = True
 
@@ -37,7 +37,7 @@ class CategoriesTest(TestCase):
 
     def test_create_new_group_category_missing_name(self):
         response = self.client.post(
-            url_for('api.v1.get_group_categories'),
+            url_for('api.v1.add_group_category'),
             data=json.dumps({}),
             content_type='application/json'
         )
@@ -51,7 +51,7 @@ class CategoriesTest(TestCase):
 
     def test_create_new_group_category_wrong_parent(self):
         response = self.client.post(
-            url_for('api.v1.get_group_categories'),
+            url_for('api.v1.add_group_category'),
             data=json.dumps({
                 'name': 'Subgroup_category 1',
                 'parent': self.group_categories[-1].id + 100,
@@ -69,7 +69,7 @@ class CategoriesTest(TestCase):
 
     def test_create_new_group_category_wrong_group(self):
         response = self.client.post(
-            url_for('api.v1.get_group_categories'),
+            url_for('api.v1.add_group_category'),
             data=json.dumps({
                 'name': 'Subgroup_category 1',
                 'parent': self.group_categories[-1].id + 100,
@@ -87,7 +87,7 @@ class CategoriesTest(TestCase):
 
     def test_create_new_group_category(self):
         response = self.client.post(
-            url_for('api.v1.get_group_categories'),
+            url_for('api.v1.add_group_category'),
             data=json.dumps({
                 'name': 'Smiths',
                 'parent': self.group_categories[0].id,
@@ -106,7 +106,7 @@ class CategoriesTest(TestCase):
 
     def test_update_group_category_wrong_parent(self):
         response = self.client.put(
-            url_for('api.v1.get_group_category', group_category_id=self.group_categories[1].id),
+            url_for('api.v1.edit_group_category', group_category_id=self.group_categories[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'parent': self.group_categories[-1].id + 100,
@@ -124,7 +124,7 @@ class CategoriesTest(TestCase):
 
     def test_update_group_category_wrong_group(self):
         response = self.client.put(
-            url_for('api.v1.get_group_category', group_category_id=self.group_categories[1].id),
+            url_for('api.v1.edit_group_category', group_category_id=self.group_categories[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'parent': self.group_categories[-1].id,
@@ -142,7 +142,7 @@ class CategoriesTest(TestCase):
 
     def test_update_group_category(self):
         response = self.client.put(
-            url_for('api.v1.get_group_category', group_category_id=self.group_categories[1].id),
+            url_for('api.v1.edit_group_category', group_category_id=self.group_categories[1].id),
             data=json.dumps({
                 'name': 'Groceries',
                 'parent': self.group_categories[0].id,
@@ -160,7 +160,7 @@ class CategoriesTest(TestCase):
         self.assertEqual(data['parent']['name'], self.group_categories[0].name)
 
     def test_delete_group_category(self):
-        url = url_for('api.v1.get_group_category', group_category_id=self.group_categories[0].id)
+        url = url_for('api.v1.delete_group_category', group_category_id=self.group_categories[0].id)
         response = self.client.delete(url, content_type='application/json')
         self.assertEqual(response.status_code, 204)
 

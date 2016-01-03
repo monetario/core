@@ -38,7 +38,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_missing_first_name(self):
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({'email': 'test@gmail.com'}),
             content_type='application/json'
         )
@@ -52,7 +52,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_missing_email(self):
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({'first_name': 'Ivan'}),
             content_type='application/json'
         )
@@ -66,7 +66,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_missing_password(self):
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({'first_name': 'Ivan', 'email': 'ivan@gmail.com'}),
             content_type='application/json'
         )
@@ -80,7 +80,7 @@ class UsersTest(TestCase):
 
     def test_create_new_missing_group(self):
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -99,7 +99,7 @@ class UsersTest(TestCase):
 
     def test_create_new_incorrect_group(self):
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -119,7 +119,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user_incorrect_email(self):
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({'email': 'Ivanmail'}),
             content_type='application/json'
         )
@@ -132,7 +132,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({'email': 'ivan@gmailcom'}),
             content_type='application/json'
         )
@@ -145,7 +145,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({'email': 'ivangmail.com'}),
             content_type='application/json'
         )
@@ -159,7 +159,7 @@ class UsersTest(TestCase):
 
     def test_create_new_user(self):
         response = self.client.post(
-            url_for('api.v1.get_users'),
+            url_for('api.v1.add_user'),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -181,7 +181,7 @@ class UsersTest(TestCase):
 
     def test_update_incorrect_group(self):
         response = self.client.put(
-            url_for('api.v1.get_user', user_id=self.users[0].id),
+            url_for('api.v1.edit_user', user_id=self.users[0].id),
             data=json.dumps({
                 'first_name': 'Ivan',
                 'last_name': 'Petrov',
@@ -201,7 +201,7 @@ class UsersTest(TestCase):
 
     def test_update_user_incorrect_email(self):
         response = self.client.put(
-            url_for('api.v1.get_user', user_id=self.users[0].id),
+            url_for('api.v1.edit_user', user_id=self.users[0].id),
             data=json.dumps({'email': 'Ivanmail'}),
             content_type='application/json'
         )
@@ -214,7 +214,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.put(
-            url_for('api.v1.get_user', user_id=self.users[0].id),
+            url_for('api.v1.edit_user', user_id=self.users[0].id),
             data=json.dumps({'email': 'ivan@gmailcom'}),
             content_type='application/json'
         )
@@ -227,7 +227,7 @@ class UsersTest(TestCase):
         self.assertIn('Not a valid email address.', data['errors']['email'])
 
         response = self.client.put(
-            url_for('api.v1.get_user', user_id=self.users[0].id),
+            url_for('api.v1.edit_user', user_id=self.users[0].id),
             data=json.dumps({'email': 'ivangmail.com'}),
             content_type='application/json'
         )
@@ -241,7 +241,7 @@ class UsersTest(TestCase):
 
     def test_update_user(self):
         response = self.client.put(
-            url_for('api.v1.get_user', user_id=self.users[0].id),
+            url_for('api.v1.edit_user', user_id=self.users[0].id),
             data=json.dumps({
                 'first_name': 'Oleg',
                 'last_name': 'Sidorov',
@@ -261,7 +261,7 @@ class UsersTest(TestCase):
         self.assertNotIn('password', data)
 
     def test_delete_user(self):
-        url = url_for('api.v1.get_user', user_id=self.users[0].id)
+        url = url_for('api.v1.delete_user', user_id=self.users[0].id)
         response = self.client.delete(url, content_type='application/json')
         self.assertEqual(response.status_code, 204)
 

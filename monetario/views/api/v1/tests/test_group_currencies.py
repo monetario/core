@@ -37,7 +37,7 @@ class GroupCurrenciesTest(TestCase):
 
     def test_create_new_group_currency_missing_name(self):
         response = self.client.post(
-            url_for('api.v1.get_group_currencies'),
+            url_for('api.v1.add_group_currency'),
             data=json.dumps({}),
             content_type='application/json'
         )
@@ -51,7 +51,7 @@ class GroupCurrenciesTest(TestCase):
 
     def test_create_new_group_currency_wrong_symbol(self):
         response = self.client.post(
-            url_for('api.v1.get_group_currencies'),
+            url_for('api.v1.add_group_currency'),
             data=json.dumps({
                 'name': 'Subgroup_currency 1',
                 'symbol': 'AAA',
@@ -69,7 +69,7 @@ class GroupCurrenciesTest(TestCase):
 
     def test_create_new_group_currency_wrong_group(self):
         response = self.client.post(
-            url_for('api.v1.get_group_currencies'),
+            url_for('api.v1.add_group_currency'),
             data=json.dumps({
                 'name': 'Subgroup_currency 1',
                 'symbol': 'UAH',
@@ -87,7 +87,7 @@ class GroupCurrenciesTest(TestCase):
 
     def test_create_new_group_currency(self):
         response = self.client.post(
-            url_for('api.v1.get_group_currencies'),
+            url_for('api.v1.add_group_currency'),
             data=json.dumps({
                 'name': 'Smiths',
                 'symbol': 'SEK',
@@ -105,7 +105,7 @@ class GroupCurrenciesTest(TestCase):
 
     def test_update_group_currency_wrong_symbol(self):
         response = self.client.put(
-            url_for('api.v1.get_group_currency', group_currency_id=self.group_currencies[1].id),
+            url_for('api.v1.edit_group_currency', group_currency_id=self.group_currencies[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'symbol': 'AAA',
@@ -123,7 +123,7 @@ class GroupCurrenciesTest(TestCase):
 
     def test_update_group_currency_wrong_group(self):
         response = self.client.put(
-            url_for('api.v1.get_group_currency', group_currency_id=self.group_currencies[1].id),
+            url_for('api.v1.edit_group_currency', group_currency_id=self.group_currencies[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'symbol': 'EUR',
@@ -141,7 +141,7 @@ class GroupCurrenciesTest(TestCase):
 
     def test_update_group_currency(self):
         response = self.client.put(
-            url_for('api.v1.get_group_currency', group_currency_id=self.group_currencies[1].id),
+            url_for('api.v1.edit_group_currency', group_currency_id=self.group_currencies[1].id),
             data=json.dumps({
                 'name': 'Groceries',
                 'symbol': 'USD',
@@ -158,7 +158,7 @@ class GroupCurrenciesTest(TestCase):
         self.assertEqual(data['symbol'], 'USD')
 
     def test_delete_group_currency(self):
-        url = url_for('api.v1.get_group_currency', group_currency_id=self.group_currencies[0].id)
+        url = url_for('api.v1.delete_group_currency', group_currency_id=self.group_currencies[0].id)
         response = self.client.delete(url, content_type='application/json')
         self.assertEqual(response.status_code, 204)
 
