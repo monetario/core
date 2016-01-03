@@ -46,3 +46,4 @@ from . import groups
 from . import categories
 from . import group_categories
 from . import group_currencies
+from . import accounts

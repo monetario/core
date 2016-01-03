@@ -52,14 +52,6 @@ def add_group_currency():
     if not group:
         return {'errors': {'group': 'Group with this id does not exist'}}, 400
 
-    if 'parent_id' in group_currency_schema.data:
-        parent = GroupCurrency.query.filter(
-            GroupCurrency.id == group_currency_schema.data['parent_id']
-        ).first()
-
-        if not parent:
-            return {'errors': {'parent': 'Parent group_currency with this id does not exist'}}, 400
-
     group_currency = GroupCurrency(**group_currency_schema.data)
     db.session.add(group_currency)
     db.session.commit()
@@ -85,13 +77,6 @@ def edit_group_currency(group_currency_id):
 
         if not group:
             return {'errors': {'group': 'Group with this id does not exist'}}, 400
-    if 'parent_id' in group_currency_schema.data:
-        parent = GroupCurrency.query.filter(
-            GroupCurrency.id == group_currency_schema.data['parent_id']
-        ).first()
-
-        if not parent:
-            return {'errors': {'parent': 'Parent group_currency with this id does not exist'}}, 400
 
     for field, value in group_currency_schema.data.items():
         if hasattr(group_currency, field):

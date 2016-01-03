@@ -7,7 +7,7 @@ from monetario.app import create_app
 from monetario.app import db
 
 from monetario.views.api.v1.tests.fixtures import GroupFactory
-from monetario.views.api.v1.tests.fixtures import GroupCurrencySchema
+from monetario.views.api.v1.tests.fixtures import GroupCurrencyFactory
 
 
 class GroupCurrenciesTest(TestCase):
@@ -19,7 +19,7 @@ class GroupCurrenciesTest(TestCase):
         self.group = GroupFactory.create()
         db.session.add(self.group)
 
-        self.group_currencies = sorted(GroupCurrencySchema.create_batch(30), key=lambda x: x.name)
+        self.group_currencies = sorted(GroupCurrencyFactory.create_batch(30), key=lambda x: x.name)
         for group_currency in self.group_currencies:
             db.session.add(group_currency)
 

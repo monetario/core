@@ -3,6 +3,11 @@ import pycountry
 from marshmallow import Schema, fields, ValidationError
 
 
+def validate_currency_symbol(val):
+    if val not in [x.letter for x in pycountry.currencies.objects]:
+        raise ValidationError('Symbol is not valid')
+
+
 class CategoryType(fields.Field):
     def _serialize(self, value, attr, obj):
         return {'value': value, 'title': dict(obj.CATEGORY_TYPES).get(value)}
@@ -50,11 +55,6 @@ class GroupCategorySchema(Schema):
     parent_id = fields.Int(load_only=True, load_from='parent')
 
 
-def validate_currency_symbol(val):
-    if val not in [x.letter for x in pycountry.currencies.objects]:
-        raise ValidationError('Symbol is not valid')
-
-
 class GroupCurrencySchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
@@ -66,3 +66,14 @@ class GroupCurrencySchema(Schema):
 
     group = fields.Nested(GroupSchema, dump_only=True)
     group_id = fields.Int(required=True, load_only=True, load_from='group')
+
+
+class AccountSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True)
+
+    currency = fields.Nested(GroupCurrencySchema, dump_only=True)
+    currency_id = fields.Int(required=True, load_only=True, load_from='currency')
+
+    user = fields.Nested(UserSchema, dump_only=True)
+    user_id = fields.Int(required=True, load_only=True, load_from='user')

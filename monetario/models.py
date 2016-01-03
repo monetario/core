@@ -12,6 +12,7 @@ from monetario.serializers import UserSchema
 from monetario.serializers import CategorySchema
 from monetario.serializers import GroupCategorySchema
 from monetario.serializers import GroupCurrencySchema
+from monetario.serializers import AccountSchema
 
 
 record_tag_table = db.Table(
@@ -259,6 +260,21 @@ class Account(db.Model):
 
     def __repr__(self):
         return self.name
+
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_account', account_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = AccountSchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = AccountSchema()
+        result = schema.load(data, partial=partial)
+        return result
 
 
 class Record(db.Model):
