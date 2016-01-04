@@ -8,9 +8,19 @@ def validate_currency_symbol(val):
         raise ValidationError('Symbol is not valid')
 
 
-class CategoryType(fields.Field):
+class CategoryTypeField(fields.Field):
     def _serialize(self, value, attr, obj):
         return {'value': value, 'title': dict(obj.CATEGORY_TYPES).get(value)}
+
+
+class RecordTypeField(fields.Field):
+    def _serialize(self, value, attr, obj):
+        return {'value': value, 'title': dict(obj.RECORD_TYPES).get(value)}
+
+
+class PaymentMethodField(fields.Field):
+    def _serialize(self, value, attr, obj):
+        return {'value': value, 'title': dict(obj.PAYMENT_METHODS).get(value)}
 
 
 class GroupSchema(Schema):
@@ -37,7 +47,7 @@ class CategorySchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
 
-    category_type = CategoryType()
+    category_type = CategoryTypeField()
 
     parent = fields.Nested('self', dump_only=True, exclude=('parent', ))
     parent_id = fields.Int(load_only=True, load_from='parent')
@@ -46,7 +56,7 @@ class CategorySchema(Schema):
 class GroupCategorySchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
-    category_type = CategoryType()
+    category_type = CategoryTypeField()
 
     group = fields.Nested(GroupSchema, dump_only=True)
     group_id = fields.Int(required=True, load_only=True, load_from='group')
@@ -77,3 +87,25 @@ class AccountSchema(Schema):
 
     user = fields.Nested(UserSchema, dump_only=True)
     user_id = fields.Int(required=True, load_only=True, load_from='user')
+
+
+class RecordSchema(Schema):
+    id = fields.Int(dump_only=True)
+    amount = fields.Float(required=True)
+    description = fields.Str()
+    record_type = RecordTypeField()
+    payment_method = PaymentMethodField()
+    date = fields.Date()
+
+    user = fields.Nested(UserSchema, dump_only=True)
+    user_id = fields.Int(required=True, load_only=True, load_from='user')
+
+    account = fields.Nested(AccountSchema, dump_only=True)
+    account_id = fields.Int(required=True, load_only=True, load_from='account')
+
+    currency = fields.Nested(GroupCurrencySchema, dump_only=True)
+    currency_id = fields.Int(required=True, load_only=True, load_from='currency')
+
+    category = fields.Nested(GroupCategorySchema, dump_only=True)
+    category_id = fields.Int(required=True, load_only=True, load_from='category')
+

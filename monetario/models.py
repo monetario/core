@@ -13,6 +13,7 @@ from monetario.serializers import CategorySchema
 from monetario.serializers import GroupCategorySchema
 from monetario.serializers import GroupCurrencySchema
 from monetario.serializers import AccountSchema
+from monetario.serializers import RecordSchema
 
 
 record_tag_table = db.Table(
@@ -281,11 +282,11 @@ class Record(db.Model):
     __tablename__ = 'record'
 
     (
-        CATEGORY_TYPE_INCOME,
-        CATEGORY_TYPE_OUTCOME,
+        RECORD_TYPE_INCOME,
+        RECORD_TYPE_OUTCOME,
     ) = range(2)
 
-    CATEGORY_TYPES = [(CATEGORY_TYPE_INCOME, 'Income'), (CATEGORY_TYPE_OUTCOME, 'Outcome')]
+    RECORD_TYPES = [(RECORD_TYPE_INCOME, 'Income'), (RECORD_TYPE_OUTCOME, 'Outcome')]
 
     (
         PAYMENT_METHOD_CASH,
@@ -308,7 +309,7 @@ class Record(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Numeric(13, 4))
     description = db.Column(db.Text, index=True)
-    record_type = db.Column(db.Integer, default=CATEGORY_TYPE_OUTCOME)  # income or outcome
+    record_type = db.Column(db.Integer, default=RECORD_TYPE_OUTCOME)  # income or outcome
     payment_method = db.Column(
         db.Integer, default=PAYMENT_METHOD_DEBIT_CARD
     )  # cash, debet card, mobile, internet payment
@@ -331,3 +332,17 @@ class Record(db.Model):
     def __repr__(self):
         return '{}_{}_{}'.format(self.account_id, self.record_type, self.amount)
 
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_record', record_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = RecordSchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = RecordSchema()
+        result = schema.load(data, partial=partial)
+        return result
