@@ -109,3 +109,11 @@ class RecordSchema(Schema):
     category = fields.Nested(GroupCategorySchema, dump_only=True)
     category_id = fields.Int(required=True, load_only=True, load_from='category')
 
+
+class AppSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True)
+    secret = fields.Str(required=True, dump_only=True)
+
+    user = fields.Nested(UserSchema, dump_only=True)
+    user_id = fields.Int(required=True, load_only=True, load_from='user')

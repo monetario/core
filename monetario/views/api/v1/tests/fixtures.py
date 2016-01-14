@@ -1,3 +1,5 @@
+import os
+import binascii
 import datetime
 from random import choice
 
@@ -6,6 +8,7 @@ import factory
 import pycountry
 from factory.fuzzy import FuzzyDecimal
 from factory.fuzzy import FuzzyDate
+from factory.fuzzy import FuzzyText
 
 from monetario.models import Group
 from monetario.models import User
@@ -13,6 +16,7 @@ from monetario.models import Category
 from monetario.models import GroupCategory
 from monetario.models import GroupCurrency
 from monetario.models import Account
+from monetario.models import App
 from monetario.models import Record
 
 
@@ -67,3 +71,11 @@ class RecordFactory(factory.Factory):
 
     amount = FuzzyDecimal(10, 10000, 2)
     date = FuzzyDate(datetime.date(2008, 1, 1), datetime.date(2016, 1, 1))
+
+
+class AppFactory(factory.Factory):
+    class Meta:
+        model = App
+
+    name = factory.Sequence(lambda n: 'account_%s' % n)
+    secret = FuzzyText(length=64, chars='0123456789abcdef')

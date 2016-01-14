@@ -7,6 +7,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .extensions import db
+from monetario.serializers import AppSchema
 from monetario.serializers import GroupSchema
 from monetario.serializers import UserSchema
 from monetario.serializers import CategorySchema
@@ -346,3 +347,47 @@ class Record(db.Model):
         schema = RecordSchema()
         result = schema.load(data, partial=partial)
         return result
+
+
+class App(db.Model):
+    __tablename__ = 'app'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), index=True)
+    secret = db.Column(db.String(255), index=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user = db.relationship(User, backref='apps')
+
+    def __repr__(self):
+        return self.name
+
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_app', app_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = AppSchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = AppSchema()
+        result = schema.load(data, partial=partial)
+        return result
+
+
+class Token(db.Model):
+    __tablename__ = 'token'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    app_id = db.Column(db.Integer, db.ForeignKey('app.id'), index=True)
+    app = db.relationship(App, backref='tokens')
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user = db.relationship(User, backref='tokens')
+
+    def __repr__(self):
+        return self.name

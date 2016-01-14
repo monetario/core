@@ -48,3 +48,4 @@ from . import group_categories
 from . import group_currencies
 from . import accounts
 from . import records
+from . import apps
