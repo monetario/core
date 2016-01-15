@@ -1,21 +1,17 @@
 import json
 
 from flask import url_for
-from flask.ext.testing import TestCase
 
-from monetario.app import create_app
 from monetario.app import db
 
 from monetario.views.api.v1.tests.fixtures import GroupFactory
 from monetario.views.api.v1.tests.fixtures import UserFactory
+from monetario.tests import BaseTestCase
 
 
-class UsersTest(TestCase):
-    SQLALCHEMY_DATABASE_URI = "sqlite://"
-    TESTING = True
-
+class UsersTest(BaseTestCase):
     def setUp(self):
-        db.create_all()
+        super().setUp()
 
         self.group = GroupFactory.create()
         db.session.add(self.group)
@@ -25,16 +21,6 @@ class UsersTest(TestCase):
             db.session.add(user)
 
         db.session.commit()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-
-    def create_app(self):
-        app = create_app()
-        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
-        app.config['TESTING'] = True
-        return app
 
     def test_create_new_user_missing_first_name(self):
         response = self.client.post(

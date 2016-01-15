@@ -1,13 +1,7 @@
-from flask.ext.testing import TestCase
-
-from monetario.app import create_app
+from monetario.tests import BaseTestCase
 
 
-class SmokeTest(TestCase):
-    def create_app(self):
-        app = create_app()
-        return app
-
+class SmokeTest(BaseTestCase):
     def test_smoke(self):
         response = self.client.get("/API/")
 

@@ -1,35 +1,21 @@
 import json
 
 from flask import url_for
-from flask.ext.testing import TestCase
 
-from monetario.app import create_app
 from monetario.app import db
 
 from monetario.views.api.v1.tests.fixtures import GroupFactory
+from monetario.tests import BaseTestCase
 
 
-class GroupsTest(TestCase):
-    SQLALCHEMY_DATABASE_URI = "sqlite://"
-    TESTING = True
-
+class GroupsTest(BaseTestCase):
     def setUp(self):
-        db.create_all()
-        self.groups = []
-        self.groups.extend(GroupFactory.create_batch(30))
+        super().setUp()
+
+        self.groups = GroupFactory.create_batch(30)
         for group in self.groups:
             db.session.add(group)
         db.session.commit()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-
-    def create_app(self):
-        app = create_app()
-        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
-        app.config['TESTING'] = True
-        return app
 
     def test_create_new_group_missing_name(self):
         response = self.client.post(

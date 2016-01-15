@@ -1,14 +1,9 @@
 from flask import url_for
-from flask.ext.testing import TestCase
 
-from monetario.app import create_app
+from monetario.tests import BaseTestCase
 
 
-class CurrencyTest(TestCase):
-    def create_app(self):
-        app = create_app()
-        return app
-
+class CurrencyTest(BaseTestCase):
     def test_get_currency_english(self):
         response = self.client.get(url_for('api.v1.get_currencies'))
 

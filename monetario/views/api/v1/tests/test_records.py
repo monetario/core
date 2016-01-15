@@ -1,7 +1,6 @@
 import json
 
 from flask import url_for
-from flask.ext.testing import TestCase
 
 from monetario.app import create_app
 from monetario.app import db
@@ -11,14 +10,15 @@ from monetario.views.api.v1.tests.fixtures import GroupCurrencyFactory
 from monetario.views.api.v1.tests.fixtures import GroupCategoryFactory
 from monetario.views.api.v1.tests.fixtures import UserFactory
 from monetario.views.api.v1.tests.fixtures import RecordFactory
+from monetario.tests import BaseTestCase
 
 
-class RecordsTest(TestCase):
+class RecordsTest(BaseTestCase):
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     TESTING = True
 
     def setUp(self):
-        db.create_all()
+        super().setUp()
 
         self.account = AccountFactory.create()
         db.session.add(self.account)
@@ -37,16 +37,6 @@ class RecordsTest(TestCase):
             db.session.add(record)
 
         db.session.commit()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-
-    def create_app(self):
-        app = create_app()
-        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
-        app.config['TESTING'] = True
-        return app
 
     def test_create_new_record_missing_amount(self):
         response = self.client.post(

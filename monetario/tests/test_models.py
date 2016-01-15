@@ -1,29 +1,11 @@
-
-from flask.ext.testing import TestCase
 from sqlalchemy.exc import IntegrityError
 
-from monetario.app import create_app
 from monetario.app import db
 from monetario.models import User
+from monetario.tests import BaseTestCase
 
 
-class UserModelTestCase(TestCase):
-    SQLALCHEMY_DATABASE_URI = "sqlite://"
-    TESTING = True
-
-    def setUp(self):
-        db.create_all()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-
-    def create_app(self):
-        app = create_app()
-        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
-        app.config['TESTING'] = True
-        return app
-
+class UserModelTestCase(BaseTestCase):
     def test_password_setter(self):
         u = User(password='cat')
         self.assertTrue(u.password_hash is not None)
