@@ -5,12 +5,16 @@ from monetario.app import db
 
 from monetario.views.api.v1.tests.fixtures import GroupFactory
 from monetario.views.api.v1.tests.fixtures import GroupCurrencyFactory
+from monetario.views.api.v1.tests.fixtures import UserFactory
 from monetario.tests import BaseTestCase
 
 
 class GroupCurrenciesTest(BaseTestCase):
     def setUp(self):
         super().setUp()
+
+        self.user = UserFactory.create()
+        db.session.add(self.user)
 
         self.group = GroupFactory.create()
         db.session.add(self.group)
@@ -21,11 +25,15 @@ class GroupCurrenciesTest(BaseTestCase):
 
         db.session.commit()
 
+        self.api_app = self.create_api_app(self.user)
+        self.token = self.get_token(self.api_app, self.user)
+
     def test_create_new_group_currency_missing_name(self):
         response = self.client.post(
             url_for('api.v1.add_group_currency'),
             data=json.dumps({}),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -43,7 +51,8 @@ class GroupCurrenciesTest(BaseTestCase):
                 'symbol': 'AAA',
                 'group': self.group.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -61,7 +70,8 @@ class GroupCurrenciesTest(BaseTestCase):
                 'symbol': 'UAH',
                 'group': self.group.id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -71,6 +81,19 @@ class GroupCurrenciesTest(BaseTestCase):
         self.assertIn('group', data['errors'])
         self.assertIn('Group with this id does not exist', data['errors']['group'])
 
+    def test_create_new_group_currency_wrong_token(self):
+        response = self.client.post(
+            url_for('api.v1.add_group_currency'),
+            data=json.dumps({
+                'name': 'Subgroup_currency 1',
+                'symbol': 'UAH',
+                'group': self.group.id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_create_new_group_currency(self):
         response = self.client.post(
             url_for('api.v1.add_group_currency'),
@@ -79,7 +102,8 @@ class GroupCurrenciesTest(BaseTestCase):
                 'symbol': 'SEK',
                 'group': self.group.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 201)
 
@@ -97,7 +121,8 @@ class GroupCurrenciesTest(BaseTestCase):
                 'symbol': 'AAA',
                 'group': self.group.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -115,7 +140,8 @@ class GroupCurrenciesTest(BaseTestCase):
                 'symbol': 'EUR',
                 'group': self.group.id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -125,6 +151,19 @@ class GroupCurrenciesTest(BaseTestCase):
         self.assertIn('group', data['errors'])
         self.assertIn('Group with this id does not exist', data['errors']['group'])
 
+    def test_update_group_currency_wrong_token(self):
+        response = self.client.put(
+            url_for('api.v1.edit_group_currency', group_currency_id=self.group_currencies[1].id),
+            data=json.dumps({
+                'name': 'Transport',
+                'symbol': 'EUR',
+                'group': self.group.id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_update_group_currency(self):
         response = self.client.put(
             url_for('api.v1.edit_group_currency', group_currency_id=self.group_currencies[1].id),
@@ -133,7 +172,8 @@ class GroupCurrenciesTest(BaseTestCase):
                 'symbol': 'USD',
                 'group': self.group.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -143,18 +183,38 @@ class GroupCurrenciesTest(BaseTestCase):
         self.assertEqual(data['name'], 'Groceries')
         self.assertEqual(data['symbol'], 'USD')
 
+    def test_delete_group_currency_wrong_token(self):
+        url = url_for('api.v1.delete_group_currency', group_currency_id=self.group_currencies[0].id)
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_delete_group_currency(self):
         url = url_for('api.v1.delete_group_currency', group_currency_id=self.group_currencies[0].id)
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 204)
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 404)
+
+    def test_get_group_currency_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_group_currencies'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_get_group_currency(self):
         response = self.client.get(
             url_for('api.v1.get_group_currencies'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -162,17 +222,28 @@ class GroupCurrenciesTest(BaseTestCase):
 
         url = data['objects'][0]
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['name'], self.group_currencies[0].name)
 
+    def test_get_group_currencies_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_group_currencies'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_get_group_currencies(self):
         per_page = 10
         response = self.client.get(
             url_for('api.v1.get_group_currencies'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -191,7 +262,8 @@ class GroupCurrenciesTest(BaseTestCase):
         per_page = 5
         response = self.client.get(
             url_for('api.v1.get_group_currencies', per_page=per_page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -212,7 +284,8 @@ class GroupCurrenciesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_group_currencies', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -233,7 +306,8 @@ class GroupCurrenciesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_group_currencies', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -241,7 +315,8 @@ class GroupCurrenciesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_group_currencies', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -249,7 +324,8 @@ class GroupCurrenciesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_group_currencies', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -262,7 +338,8 @@ class GroupCurrenciesTest(BaseTestCase):
             url_for(
                 'api.v1.get_group_currencies', per_page=per_page, page=page, sort=sort, expand=1
             ),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -278,7 +355,8 @@ class GroupCurrenciesTest(BaseTestCase):
             url_for(
                 'api.v1.get_group_currencies', per_page=per_page, page=page, sort=sort, expand=1
             ),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 

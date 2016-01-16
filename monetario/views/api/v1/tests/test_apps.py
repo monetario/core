@@ -21,12 +21,17 @@ class AppsTest(BaseTestCase):
             db.session.add(app)
 
         db.session.commit()
+        self.api_app = self.apps[0]
+        self.api_app.generate_auth_token()
+
+        self.token = self.get_token(self.api_app, self.user)
 
     def test_create_new_app_missing_name(self):
         response = self.client.post(
             url_for('api.v1.add_app'),
             data=json.dumps({}),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -43,7 +48,8 @@ class AppsTest(BaseTestCase):
                 'name': 'Subapp 1',
                 'user': self.user.id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -53,6 +59,18 @@ class AppsTest(BaseTestCase):
         self.assertIn('user', data['errors'])
         self.assertIn('User with this id does not exist', data['errors']['user'])
 
+    def test_create_new_app_wrong_token(self):
+        response = self.client.post(
+            url_for('api.v1.add_app'),
+            data=json.dumps({
+                'name': 'Subapp 1',
+                'user': self.user.id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_create_new_app(self):
         response = self.client.post(
             url_for('api.v1.add_app'),
@@ -60,7 +78,8 @@ class AppsTest(BaseTestCase):
                 'name': 'Smiths',
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 201)
 
@@ -76,7 +95,8 @@ class AppsTest(BaseTestCase):
                 'name': 'Transport',
                 'user': self.user.id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -86,6 +106,18 @@ class AppsTest(BaseTestCase):
         self.assertIn('user', data['errors'])
         self.assertIn('User with this id does not exist', data['errors']['user'])
 
+    def test_update_app_wrong_token(self):
+        response = self.client.put(
+            url_for('api.v1.edit_app', app_id=self.apps[1].id),
+            data=json.dumps({
+                'name': 'Transport',
+                'user': self.user.id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_update_app(self):
         response = self.client.put(
             url_for('api.v1.edit_app', app_id=self.apps[1].id),
@@ -93,7 +125,8 @@ class AppsTest(BaseTestCase):
                 'name': 'Groceries',
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -102,19 +135,39 @@ class AppsTest(BaseTestCase):
         self.assertIn('name', data)
         self.assertEqual(data['name'], 'Groceries')
 
+    def test_delete_app_wrong_token(self):
+        url = url_for('api.v1.delete_app', app_id=self.apps[0].id)
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_delete_app(self):
         url = url_for('api.v1.delete_app', app_id=self.apps[0].id)
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 204)
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 404)
+
+    def test_generate_secret_wrong_token(self):
+        response = self.client.put(
+            url_for('api.v1.generate_secret', app_id=self.apps[0].id),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_generate_secret(self):
         secret = self.apps[0].secret
         response = self.client.put(
             url_for('api.v1.generate_secret', app_id=self.apps[0].id),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -123,14 +176,24 @@ class AppsTest(BaseTestCase):
         self.assertIn('secret', data)
         self.assertNotEqual(data['secret'], secret)
 
+    def test_revoke_secret_wrong_token(self):
+        url = url_for('api.v1.revoke_secret', app_id=self.apps[0].id)
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_revoke_secret(self):
         url = url_for('api.v1.revoke_secret', app_id=self.apps[0].id)
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 200)
 
         response = self.client.get(
             url_for('api.v1.get_app', app_id=self.apps[0].id),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -139,29 +202,48 @@ class AppsTest(BaseTestCase):
         self.assertIn('secret', data)
         self.assertIsNone(data['secret'])
 
+    def test_get_app_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_apps'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_get_app(self):
         response = self.client.get(
             url_for('api.v1.get_apps'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
 
-        print('@' * 100, self.apps, data['objects'])
         url = data['objects'][0]
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['name'], self.apps[0].name)
 
+    def test_get_apps_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_apps'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_get_apps(self):
         per_page = 10
         response = self.client.get(
             url_for('api.v1.get_apps'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -180,7 +262,8 @@ class AppsTest(BaseTestCase):
         per_page = 5
         response = self.client.get(
             url_for('api.v1.get_apps', per_page=per_page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -201,7 +284,8 @@ class AppsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_apps', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -222,7 +306,8 @@ class AppsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_apps', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -230,7 +315,8 @@ class AppsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_apps', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -238,7 +324,8 @@ class AppsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_apps', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -251,7 +338,8 @@ class AppsTest(BaseTestCase):
             url_for(
                 'api.v1.get_apps', per_page=per_page, page=page, sort=sort, expand=1
             ),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -267,7 +355,8 @@ class AppsTest(BaseTestCase):
             url_for(
                 'api.v1.get_apps', per_page=per_page, page=page, sort=sort, expand=1
             ),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 

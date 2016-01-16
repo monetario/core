@@ -117,3 +117,9 @@ class AppSchema(Schema):
 
     user = fields.Nested(UserSchema, dump_only=True)
     user_id = fields.Int(required=True, load_only=True, load_from='user')
+
+
+class TokenSchema(Schema):
+    email = fields.Email(required=True)
+    password = fields.Str(load_only=True, required=True)
+    secret = fields.Str(required=True)

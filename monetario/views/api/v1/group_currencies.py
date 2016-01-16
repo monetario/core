@@ -2,6 +2,7 @@
 import json
 
 from flask import request
+from flask_login import login_required
 
 from monetario.models import db
 from monetario.models import Group
@@ -13,6 +14,7 @@ from monetario.views.api.decorators import collection
 
 
 @bp.route('/group_currencies/', methods=['GET'])
+@login_required
 @jsonify()
 @collection(GroupCurrency)
 def get_group_currencies():
@@ -20,6 +22,7 @@ def get_group_currencies():
 
 
 @bp.route('/group_currencies/<int:group_currency_id>/', methods=['GET'])
+@login_required
 @jsonify()
 def get_group_currency(group_currency_id):
     group_currency = GroupCurrency.query.get_or_404(group_currency_id)
@@ -27,6 +30,7 @@ def get_group_currency(group_currency_id):
 
 
 @bp.route('/group_currencies/<int:group_currency_id>/', methods=['DELETE'])
+@login_required
 @jsonify()
 def delete_group_currency(group_currency_id):
     group_currency = GroupCurrency.query.get_or_404(group_currency_id)
@@ -38,6 +42,7 @@ def delete_group_currency(group_currency_id):
 
 
 @bp.route('/group_currencies/', methods=['POST'])
+@login_required
 @jsonify()
 def add_group_currency():
     group_currency_schema = GroupCurrency.from_json(json.loads(request.data.decode('utf-8')))
@@ -60,6 +65,7 @@ def add_group_currency():
 
 
 @bp.route('/group_currencies/<int:group_currency_id>/', methods=['PUT'])
+@login_required
 @jsonify()
 def edit_group_currency(group_currency_id):
     group_currency = GroupCurrency.query.get_or_404(group_currency_id)

@@ -5,7 +5,14 @@ bp = Blueprint("api.v1", __name__)
 
 def get_catalog():
     return {
+        'accounts_url': url_for('api.v1.get_accounts', _external=True),
+        'apps_url': url_for('api.v1.get_apps', _external=True),
+        'categories_url': url_for('api.v1.get_categories', _external=True),
         'currencies_url': url_for('api.v1.get_currencies', _external=True),
+        'group_categories_url': url_for('api.v1.get_group_categories', _external=True),
+        'group_currencies_url': url_for('api.v1.get_group_currencies', _external=True),
+        'groups_url': url_for('api.v1.get_groups', _external=True),
+        'records_url': url_for('api.v1.get_records', _external=True),
         'users_url': url_for('api.v1.get_users', _external=True),
     }
 

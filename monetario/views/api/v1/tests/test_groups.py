@@ -5,6 +5,7 @@ from flask import url_for
 from monetario.app import db
 
 from monetario.views.api.v1.tests.fixtures import GroupFactory
+from monetario.views.api.v1.tests.fixtures import UserFactory
 from monetario.tests import BaseTestCase
 
 
@@ -12,16 +13,23 @@ class GroupsTest(BaseTestCase):
     def setUp(self):
         super().setUp()
 
+        self.user = UserFactory.create()
+        db.session.add(self.user)
+
         self.groups = GroupFactory.create_batch(30)
         for group in self.groups:
             db.session.add(group)
         db.session.commit()
 
+        self.api_app = self.create_api_app(self.user)
+        self.token = self.get_token(self.api_app, self.user)
+
     def test_create_new_group_missing_name(self):
         response = self.client.post(
             url_for('api.v1.add_group'),
             data=json.dumps({}),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -31,6 +39,15 @@ class GroupsTest(BaseTestCase):
         self.assertIn('name', data['errors'])
         self.assertIn('Missing data for required field.', data['errors']['name'])
 
+    def test_create_new_group_wrong_token(self):
+        response = self.client.post(
+            url_for('api.v1.add_group'),
+            data=json.dumps({}),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_create_new_group(self):
         response = self.client.post(
             url_for('api.v1.add_group'),
@@ -38,7 +55,8 @@ class GroupsTest(BaseTestCase):
                 'name': 'Smiths',
 
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 201)
 
@@ -47,6 +65,18 @@ class GroupsTest(BaseTestCase):
         self.assertIn('name', data)
         self.assertEqual(data['name'], 'Smiths')
 
+    def test_update_group_wrong_token(self):
+        response = self.client.put(
+            url_for('api.v1.edit_group', group_id=self.groups[0].id),
+            data=json.dumps({
+                'id': self.groups[0].id,
+                'name': 'Work',
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_update_group(self):
         response = self.client.put(
             url_for('api.v1.edit_group', group_id=self.groups[0].id),
@@ -54,7 +84,8 @@ class GroupsTest(BaseTestCase):
                 'id': self.groups[0].id,
                 'name': 'Work',
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -63,18 +94,38 @@ class GroupsTest(BaseTestCase):
         self.assertIn('name', data)
         self.assertEqual(data['name'], 'Work')
 
+    def test_delete_group_wrong_token(self):
+        url = url_for('api.v1.delete_group', group_id=self.groups[0].id)
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_delete_group(self):
         url = url_for('api.v1.delete_group', group_id=self.groups[0].id)
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 204)
 
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 404)
+
+    def test_get_group_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_groups'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_get_group(self):
         response = self.client.get(
             url_for('api.v1.get_groups'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -82,17 +133,28 @@ class GroupsTest(BaseTestCase):
 
         url = data['objects'][0]
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['name'], self.groups[0].name)
 
+    def test_get_groups_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_groups'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_get_groups(self):
         per_page = 10
         response = self.client.get(
             url_for('api.v1.get_groups'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -111,7 +173,8 @@ class GroupsTest(BaseTestCase):
         per_page = 5
         response = self.client.get(
             url_for('api.v1.get_groups', per_page=per_page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -132,7 +195,8 @@ class GroupsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_groups', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -153,7 +217,8 @@ class GroupsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_groups', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -161,7 +226,8 @@ class GroupsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_groups', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -169,7 +235,8 @@ class GroupsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_groups', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -180,7 +247,8 @@ class GroupsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_groups', per_page=per_page, page=page, sort=sort, expand=1),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -194,7 +262,8 @@ class GroupsTest(BaseTestCase):
         sort = 'name,desc'
         response = self.client.get(
             url_for('api.v1.get_groups', per_page=per_page, page=page, sort=sort, expand=1),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 

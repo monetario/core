@@ -2,6 +2,7 @@
 import json
 
 from flask import request
+from flask_login import login_required
 
 from monetario.models import db
 from monetario.models import Group
@@ -13,6 +14,7 @@ from monetario.views.api.decorators import collection
 
 
 @bp.route('/users/', methods=['GET'])
+@login_required
 @jsonify()
 @collection(User)
 def get_users():
@@ -20,6 +22,7 @@ def get_users():
 
 
 @bp.route('/users/<int:user_id>/', methods=['GET'])
+@login_required
 @jsonify()
 def get_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -27,6 +30,7 @@ def get_user(user_id):
 
 
 @bp.route('/users/<int:user_id>/', methods=['DELETE'])
+@login_required
 @jsonify()
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -62,6 +66,7 @@ def add_user():
 
 
 @bp.route('/users/<int:user_id>/', methods=['PUT'])
+@login_required
 @jsonify()
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)

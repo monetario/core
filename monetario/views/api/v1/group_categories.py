@@ -2,6 +2,7 @@
 import json
 
 from flask import request
+from flask_login import login_required
 
 from monetario.models import db
 from monetario.models import Group
@@ -13,6 +14,7 @@ from monetario.views.api.decorators import collection
 
 
 @bp.route('/group_categories/', methods=['GET'])
+@login_required
 @jsonify()
 @collection(GroupCategory)
 def get_group_categories():
@@ -20,6 +22,7 @@ def get_group_categories():
 
 
 @bp.route('/group_categories/<int:group_category_id>/', methods=['GET'])
+@login_required
 @jsonify()
 def get_group_category(group_category_id):
     group_category = GroupCategory.query.get_or_404(group_category_id)
@@ -27,6 +30,7 @@ def get_group_category(group_category_id):
 
 
 @bp.route('/group_categories/<int:group_category_id>/', methods=['DELETE'])
+@login_required
 @jsonify()
 def delete_group_category(group_category_id):
     group_category = GroupCategory.query.get_or_404(group_category_id)
@@ -38,6 +42,7 @@ def delete_group_category(group_category_id):
 
 
 @bp.route('/group_categories/', methods=['POST'])
+@login_required
 @jsonify()
 def add_group_category():
     group_category_schema = GroupCategory.from_json(json.loads(request.data.decode('utf-8')))
@@ -68,6 +73,7 @@ def add_group_category():
 
 
 @bp.route('/group_categories/<int:group_category_id>/', methods=['PUT'])
+@login_required
 @jsonify()
 def edit_group_category(group_category_id):
     group_category = GroupCategory.query.get_or_404(group_category_id)

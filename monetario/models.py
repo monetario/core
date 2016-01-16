@@ -4,10 +4,12 @@ from flask import current_app
 from flask import url_for
 
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import BadSignature, SignatureExpired
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .extensions import db
 from monetario.serializers import AppSchema
+from monetario.serializers import TokenSchema
 from monetario.serializers import GroupSchema
 from monetario.serializers import UserSchema
 from monetario.serializers import CategorySchema
@@ -95,6 +97,9 @@ class User(db.Model):
     def password(self, password):
         self.password_hash = generate_password_hash(password)
 
+    def get_id(self):
+        return self.id
+
     def is_authenticated(self):
         return True
 
@@ -117,7 +122,9 @@ class User(db.Model):
 
         try:
             data = s.loads(token)
-        except Exception:
+        except SignatureExpired:
+            return None
+        except BadSignature:
             return None
 
         return User.query.get(data['id'])
@@ -362,6 +369,23 @@ class App(db.Model):
     def __repr__(self):
         return self.name
 
+    def generate_auth_token(self, expires_in=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expires_in)
+        return s.dumps({'id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None
+        except BadSignature:
+            return None
+
+        return App.query.get(data['id'])
+
     @property
     def resource_url(self):
         return url_for('api.v1.get_app', app_id=self.id, _external=True)
@@ -389,5 +413,33 @@ class Token(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user = db.relationship(User, backref='tokens')
 
+    def generate_auth_token(self, expires_in=3600):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expires_in)
+        return s.dumps({'id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None
+        except BadSignature:
+            return None
+
+        return Token.query.get(data['id'])
+
+    def to_json(self, exclude=None):
+        schema = TokenSchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = TokenSchema()
+        result = schema.load(data, partial=partial)
+        return result
+
     def __repr__(self):
-        return self.name
+        return '<Token app_id="{}" user_id="{}" />'.format(self.app_id, self.user_id)

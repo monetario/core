@@ -2,6 +2,7 @@
 import json
 
 from flask import request
+from flask_login import login_required
 
 from monetario.models import db
 from monetario.models import User
@@ -16,6 +17,7 @@ from monetario.views.api.decorators import collection
 
 
 @bp.route('/records/', methods=['GET'])
+@login_required
 @jsonify()
 @collection(Record)
 def get_records():
@@ -23,6 +25,7 @@ def get_records():
 
 
 @bp.route('/records/<int:record_id>/', methods=['GET'])
+@login_required
 @jsonify()
 def get_record(record_id):
     record = Record.query.get_or_404(record_id)
@@ -30,6 +33,7 @@ def get_record(record_id):
 
 
 @bp.route('/records/<int:record_id>/', methods=['DELETE'])
+@login_required
 @jsonify()
 def delete_record(record_id):
     record = Record.query.get_or_404(record_id)
@@ -41,6 +45,7 @@ def delete_record(record_id):
 
 
 @bp.route('/records/', methods=['POST'])
+@login_required
 @jsonify()
 def add_record():
     record_schema = Record.from_json(json.loads(request.data.decode('utf-8')))
@@ -80,6 +85,7 @@ def add_record():
 
 
 @bp.route('/records/<int:record_id>/', methods=['PUT'])
+@login_required
 @jsonify()
 def edit_record(record_id):
     record = Record.query.get_or_404(record_id)

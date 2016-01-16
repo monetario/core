@@ -2,6 +2,7 @@
 import json
 
 from flask import request
+from flask_login import login_required
 
 from monetario.models import db
 from monetario.models import Category
@@ -12,6 +13,7 @@ from monetario.views.api.decorators import collection
 
 
 @bp.route('/categories/', methods=['GET'])
+@login_required
 @jsonify()
 @collection(Category)
 def get_categories():
@@ -19,6 +21,7 @@ def get_categories():
 
 
 @bp.route('/categories/<int:category_id>/', methods=['GET'])
+@login_required
 @jsonify()
 def get_category(category_id):
     category = Category.query.get_or_404(category_id)
@@ -26,6 +29,7 @@ def get_category(category_id):
 
 
 @bp.route('/categories/<int:category_id>/', methods=['DELETE'])
+@login_required
 @jsonify()
 def delete_category(category_id):
     category = Category.query.get_or_404(category_id)
@@ -37,6 +41,7 @@ def delete_category(category_id):
 
 
 @bp.route('/categories/', methods=['POST'])
+@login_required
 @jsonify()
 def add_category():
     category_schema = Category.from_json(json.loads(request.data.decode('utf-8')))
@@ -57,6 +62,7 @@ def add_category():
 
 
 @bp.route('/categories/<int:category_id>/', methods=['PUT'])
+@login_required
 @jsonify()
 def edit_category(category_id):
     category = Category.query.get_or_404(category_id)

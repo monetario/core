@@ -2,7 +2,6 @@ import json
 
 from flask import url_for
 
-from monetario.app import create_app
 from monetario.app import db
 
 from monetario.views.api.v1.tests.fixtures import AccountFactory
@@ -38,11 +37,15 @@ class RecordsTest(BaseTestCase):
 
         db.session.commit()
 
+        self.api_app = self.create_api_app(self.user)
+        self.token = self.get_token(self.api_app, self.user)
+
     def test_create_new_record_missing_amount(self):
         response = self.client.post(
             url_for('api.v1.add_record'),
             data=json.dumps({}),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -62,7 +65,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -82,7 +86,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -102,7 +107,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id + 100,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -122,7 +128,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -131,6 +138,21 @@ class RecordsTest(BaseTestCase):
         self.assertIn('errors', data)
         self.assertIn('account', data['errors'])
         self.assertIn('Account with this id does not exist', data['errors']['account'])
+
+    def test_create_new_record_wrong_token(self):
+        response = self.client.post(
+            url_for('api.v1.add_record'),
+            data=json.dumps({
+                'amount': 100,
+                'currency': self.currency.id,
+                'account': self.account.id,
+                'category': self.category.id,
+                'user': self.user.id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_create_new_record(self):
         response = self.client.post(
@@ -142,7 +164,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 201)
 
@@ -165,7 +188,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -185,7 +209,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -205,7 +230,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id + 100,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -225,7 +251,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -234,6 +261,21 @@ class RecordsTest(BaseTestCase):
         self.assertIn('errors', data)
         self.assertIn('account', data['errors'])
         self.assertIn('Account with this id does not exist', data['errors']['account'])
+
+    def test_update_record_wrong_token(self):
+        response = self.client.put(
+            url_for('api.v1.edit_record', record_id=self.records[1].id),
+            data=json.dumps({
+                'amount': 100,
+                'currency': self.currency.id,
+                'account': self.account.id,
+                'category': self.category.id,
+                'user': self.user.id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_update_record(self):
         response = self.client.put(
@@ -245,7 +287,8 @@ class RecordsTest(BaseTestCase):
                 'category': self.category.id,
                 'user': self.user.id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -255,18 +298,38 @@ class RecordsTest(BaseTestCase):
         self.assertEqual(data['amount'], 99.5)
         self.assertEqual(data['currency']['id'], self.currency.id)
 
+    def test_delete_record_wrong_token(self):
+        url = url_for('api.v1.delete_record', record_id=self.records[0].id)
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_delete_record(self):
         url = url_for('api.v1.delete_record', record_id=self.records[0].id)
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 204)
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 404)
+
+    def test_get_record_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_records'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_get_record(self):
         response = self.client.get(
             url_for('api.v1.get_records'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -274,17 +337,28 @@ class RecordsTest(BaseTestCase):
 
         url = data['objects'][0]
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['date'], self.records[0].date.isoformat())
 
+    def test_get_records_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_records'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_get_records(self):
         per_page = 10
         response = self.client.get(
             url_for('api.v1.get_records'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -303,7 +377,8 @@ class RecordsTest(BaseTestCase):
         per_page = 5
         response = self.client.get(
             url_for('api.v1.get_records', per_page=per_page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -324,7 +399,8 @@ class RecordsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_records', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -345,7 +421,8 @@ class RecordsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_records', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -353,7 +430,8 @@ class RecordsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_records', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -361,7 +439,8 @@ class RecordsTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_records', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -374,7 +453,8 @@ class RecordsTest(BaseTestCase):
             url_for(
                 'api.v1.get_records', per_page=per_page, page=page, sort=sort, expand=1
             ),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -390,7 +470,8 @@ class RecordsTest(BaseTestCase):
             url_for(
                 'api.v1.get_records', per_page=per_page, page=page, sort=sort, expand=1
             ),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 

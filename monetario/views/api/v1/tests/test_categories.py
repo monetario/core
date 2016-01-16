@@ -5,6 +5,7 @@ from flask import url_for
 from monetario.app import db
 
 from monetario.views.api.v1.tests.fixtures import CategoryFactory
+from monetario.views.api.v1.tests.fixtures import UserFactory
 from monetario.tests import BaseTestCase
 
 
@@ -12,17 +13,24 @@ class CategoriesTest(BaseTestCase):
     def setUp(self):
         super().setUp()
 
+        self.user = UserFactory.create()
+        db.session.add(self.user)
+
         self.categories = []
         self.categories.extend(CategoryFactory.create_batch(30))
         for category in self.categories:
             db.session.add(category)
         db.session.commit()
 
+        self.api_app = self.create_api_app(self.user)
+        self.token = self.get_token(self.api_app, self.user)
+
     def test_create_new_category_missing_name(self):
         response = self.client.post(
             url_for('api.v1.add_category'),
             data=json.dumps({}),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -39,7 +47,8 @@ class CategoriesTest(BaseTestCase):
                 'name': 'Subcategory 1',
                 'parent': self.categories[-1].id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -49,6 +58,18 @@ class CategoriesTest(BaseTestCase):
         self.assertIn('parent', data['errors'])
         self.assertIn('Parent category with this id does not exist', data['errors']['parent'])
 
+    def test_create_new_category_wrong_token(self):
+        response = self.client.post(
+            url_for('api.v1.add_category'),
+            data=json.dumps({
+                'name': 'Subcategory 1',
+                'parent': self.categories[-1].id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_create_new_category(self):
         response = self.client.post(
             url_for('api.v1.add_category'),
@@ -56,7 +77,8 @@ class CategoriesTest(BaseTestCase):
                 'name': 'Smiths',
                 'parent': self.categories[0].id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 201)
 
@@ -74,7 +96,8 @@ class CategoriesTest(BaseTestCase):
                 'name': 'Transport',
                 'parent': self.categories[-1].id + 100
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 400)
 
@@ -84,6 +107,18 @@ class CategoriesTest(BaseTestCase):
         self.assertIn('parent', data['errors'])
         self.assertIn('Parent category with this id does not exist', data['errors']['parent'])
 
+    def test_update_category_wrong_token(self):
+        response = self.client.put(
+            url_for('api.v1.edit_category', category_id=self.categories[1].id),
+            data=json.dumps({
+                'name': 'Transport',
+                'parent': self.categories[-1].id
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_update_category(self):
         response = self.client.put(
             url_for('api.v1.edit_category', category_id=self.categories[1].id),
@@ -91,7 +126,8 @@ class CategoriesTest(BaseTestCase):
                 'name': 'Groceries',
                 'parent': self.categories[0].id
             }),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -102,18 +138,38 @@ class CategoriesTest(BaseTestCase):
         self.assertEqual(data['parent']['id'], self.categories[0].id)
         self.assertEqual(data['parent']['name'], self.categories[0].name)
 
+    def test_delete_category_wrong_token(self):
+        url = url_for('api.v1.delete_category', category_id=self.categories[0].id)
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_delete_category(self):
         url = url_for('api.v1.delete_category', category_id=self.categories[0].id)
-        response = self.client.delete(url, content_type='application/json')
+        response = self.client.delete(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 204)
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 404)
+
+    def test_get_category_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_categories'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_get_category(self):
         response = self.client.get(
             url_for('api.v1.get_categories'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -121,17 +177,28 @@ class CategoriesTest(BaseTestCase):
 
         url = data['objects'][0]
 
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.get(
+            url, content_type='application/json', headers={'Authentication-Token': self.token}
+        )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['name'], self.categories[0].name)
 
+    def test_get_categories_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_categories'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_get_categories(self):
         per_page = 10
         response = self.client.get(
             url_for('api.v1.get_categories'),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -150,7 +217,8 @@ class CategoriesTest(BaseTestCase):
         per_page = 5
         response = self.client.get(
             url_for('api.v1.get_categories', per_page=per_page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -171,7 +239,8 @@ class CategoriesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_categories', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -192,7 +261,8 @@ class CategoriesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_categories', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -200,7 +270,8 @@ class CategoriesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_categories', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -208,7 +279,8 @@ class CategoriesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_categories', per_page=per_page, page=page),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 404)
 
@@ -219,7 +291,8 @@ class CategoriesTest(BaseTestCase):
 
         response = self.client.get(
             url_for('api.v1.get_categories', per_page=per_page, page=page, sort=sort, expand=1),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 
@@ -233,7 +306,8 @@ class CategoriesTest(BaseTestCase):
         sort = 'name,desc'
         response = self.client.get(
             url_for('api.v1.get_categories', per_page=per_page, page=page, sort=sort, expand=1),
-            content_type='application/json'
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
         )
         self.assertEqual(response.status_code, 200)
 

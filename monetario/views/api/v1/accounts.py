@@ -2,6 +2,7 @@
 import json
 
 from flask import request
+from flask_login import login_required
 
 from monetario.models import db
 from monetario.models import User
@@ -14,6 +15,7 @@ from monetario.views.api.decorators import collection
 
 
 @bp.route('/accounts/', methods=['GET'])
+@login_required
 @jsonify()
 @collection(Account)
 def get_accounts():
@@ -21,6 +23,7 @@ def get_accounts():
 
 
 @bp.route('/accounts/<int:account_id>/', methods=['GET'])
+@login_required
 @jsonify()
 def get_account(account_id):
     account = Account.query.get_or_404(account_id)
@@ -28,6 +31,7 @@ def get_account(account_id):
 
 
 @bp.route('/accounts/<int:account_id>/', methods=['DELETE'])
+@login_required
 @jsonify()
 def delete_account(account_id):
     account = Account.query.get_or_404(account_id)
@@ -39,6 +43,7 @@ def delete_account(account_id):
 
 
 @bp.route('/accounts/', methods=['POST'])
+@login_required
 @jsonify()
 def add_account():
     account_schema = Account.from_json(json.loads(request.data.decode('utf-8')))
@@ -66,6 +71,7 @@ def add_account():
 
 
 @bp.route('/accounts/<int:account_id>/', methods=['PUT'])
+@login_required
 @jsonify()
 def edit_account(account_id):
     account = Account.query.get_or_404(account_id)

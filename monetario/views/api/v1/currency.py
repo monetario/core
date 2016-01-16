@@ -3,12 +3,14 @@ import gettext
 import pycountry
 
 from flask import request
+from flask_login import login_required
 
 from . import bp
 from ..decorators import jsonify
 
 
 @bp.route('/currencies/')
+@login_required
 @jsonify()
 def get_currencies():
     def prepare_currency(currency):

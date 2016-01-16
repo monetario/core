@@ -2,6 +2,7 @@
 import json
 
 from flask import request
+from flask_login import login_required
 
 from monetario.models import db
 from monetario.models import Group
@@ -12,6 +13,7 @@ from monetario.views.api.decorators import collection
 
 
 @bp.route('/groups/', methods=['GET'])
+@login_required
 @jsonify()
 @collection(Group)
 def get_groups():
@@ -19,6 +21,7 @@ def get_groups():
 
 
 @bp.route('/groups/<int:group_id>/', methods=['GET'])
+@login_required
 @jsonify()
 def get_group(group_id):
     group = Group.query.get_or_404(group_id)
@@ -26,6 +29,7 @@ def get_group(group_id):
 
 
 @bp.route('/groups/<int:group_id>/', methods=['DELETE'])
+@login_required
 @jsonify()
 def delete_group(group_id):
     group = Group.query.get_or_404(group_id)
@@ -37,6 +41,7 @@ def delete_group(group_id):
 
 
 @bp.route('/groups/', methods=['POST'])
+@login_required
 @jsonify()
 def add_group():
     group_schema = Group.from_json(json.loads(request.data.decode('utf-8')))
@@ -52,6 +57,7 @@ def add_group():
 
 
 @bp.route('/groups/<int:group_id>/', methods=['PUT'])
+@login_required
 @jsonify()
 def edit_group(group_id):
     group = Group.query.get_or_404(group_id)
