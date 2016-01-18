@@ -33,12 +33,12 @@ def configure_views(app):
 
 @login_manager.request_loader
 def load_user_from_request(request):
-    token = request.headers.get('Authentication-Token')
+    auth_token = request.headers.get('Authentication-Token')
 
-    if token:
-        token = Token.verify_auth_token(token)
+    if auth_token:
+        token = Token.query.filter(Token.token == auth_token).first()
 
-        if token and token.user_id:
+        if token and token.user_id and token.is_token_valid():
             return User.query.get(token.user_id)
 
     return None

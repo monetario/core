@@ -44,7 +44,7 @@ def validation_error(e):
     return bad_request(e.args[0])
 
 
-from . import auth
+from . import token
 from . import test_views
 from . import currency
 from . import discovery

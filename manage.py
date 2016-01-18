@@ -64,7 +64,7 @@ def create_api_app():
     db.session.add(api_app)
     db.session.commit()
 
-    api_app.secret = api_app.generate_auth_token(expires_in=157680000)
+    api_app.secret = api_app.generate_auth_token()
     db.session.add(api_app)
     db.session.commit()
 

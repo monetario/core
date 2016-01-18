@@ -369,7 +369,7 @@ class App(db.Model):
     def __repr__(self):
         return self.name
 
-    def generate_auth_token(self, expires_in=3600):
+    def generate_auth_token(self, expires_in=157680000):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expires_in)
         return s.dumps({'id': self.id}).decode('utf-8')
 
@@ -413,9 +413,23 @@ class Token(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user = db.relationship(User, backref='tokens')
 
-    def generate_auth_token(self, expires_in=3600):
+    token = db.Column(db.String(255), index=True)
+
+    def generate_auth_token(self, expires_in=900):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expires_in)
         return s.dumps({'id': self.id}).decode('utf-8')
+
+    def is_token_valid(self):
+        s = Serializer(current_app.config['SECRET_KEY'])
+
+        try:
+            data = s.loads(self.token)
+        except SignatureExpired:
+            return False
+        except BadSignature:
+            return False
+
+        return self.id == data['id']
 
     @staticmethod
     def verify_auth_token(token):

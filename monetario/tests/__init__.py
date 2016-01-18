@@ -25,15 +25,26 @@ class BaseTestCase(TestCase):
 
     def create_api_app(self, user, expires_in=60):
         app = App(name='Test API', user=user)
-        app.secret = app.generate_auth_token(expires_in=expires_in)
+
         db.session.add(app)
         db.session.commit()
+
+        app.secret = app.generate_auth_token(expires_in=expires_in)
+
+        db.session.add(app)
+        db.session.commit()
+
         return app
 
-    def get_token(self, app, user):
+    def get_token(self, app, user, expires_in=60):
         token = Token(app=app, user=user)
 
         db.session.add(token)
         db.session.commit()
 
-        return token.generate_auth_token()
+        token.token = token.generate_auth_token(expires_in=expires_in)
+
+        db.session.add(token)
+        db.session.commit()
+
+        return token.token
