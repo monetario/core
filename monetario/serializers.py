@@ -97,16 +97,18 @@ class RecordSchema(Schema):
     payment_method = PaymentMethodField()
     date = fields.Date()
 
-    user = fields.Nested(UserSchema, dump_only=True)
+    user = fields.Nested(
+        UserSchema, dump_only=True, only=('id', 'first_name', 'last_name', 'email')
+    )
     user_id = fields.Int(required=True, load_only=True, load_from='user')
 
-    account = fields.Nested(AccountSchema, dump_only=True)
+    account = fields.Nested(AccountSchema, dump_only=True, only=('id', 'name'))
     account_id = fields.Int(required=True, load_only=True, load_from='account')
 
-    currency = fields.Nested(GroupCurrencySchema, dump_only=True)
+    currency = fields.Nested(GroupCurrencySchema, dump_only=True, only=('id', 'name'))
     currency_id = fields.Int(required=True, load_only=True, load_from='currency')
 
-    category = fields.Nested(GroupCategorySchema, dump_only=True)
+    category = fields.Nested(GroupCategorySchema, dump_only=True, only=('id', 'name'))
     category_id = fields.Int(required=True, load_only=True, load_from='category')
 
 
@@ -123,3 +125,13 @@ class TokenSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(load_only=True, required=True)
     secret = fields.Str(required=True)
+
+
+class BalanceSchema(Schema):
+    cash_flow = fields.Float(required=True)
+    start_balance = fields.Float()
+    end_balance = fields.Float()
+    outcome = fields.Float()
+    income = fields.Float()
+    date = fields.Date()
+    record_type = fields.Int()

@@ -25,8 +25,7 @@ def get_users():
 @login_required
 @jsonify()
 def get_user(user_id):
-    user = User.query.get_or_404(user_id)
-    return user
+    return User.query.get_or_404(user_id)
 
 
 @bp.route('/users/<int:user_id>/', methods=['DELETE'])

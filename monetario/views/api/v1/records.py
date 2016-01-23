@@ -19,7 +19,7 @@ from monetario.views.api.decorators import collection
 @bp.route('/records/', methods=['GET'])
 @login_required
 @jsonify()
-@collection(Record)
+@collection(Record, max_per_page=100)
 def get_records():
     return Record.query
 

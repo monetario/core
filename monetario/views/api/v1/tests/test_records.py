@@ -356,7 +356,7 @@ class RecordsTest(BaseTestCase):
     def test_get_records(self):
         per_page = 10
         response = self.client.get(
-            url_for('api.v1.get_records'),
+            url_for('api.v1.get_records', per_page=per_page),
             content_type='application/json',
             headers={'Authentication-Token': self.token}
         )
