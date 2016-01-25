@@ -59,7 +59,6 @@ class GroupCategorySchema(Schema):
     category_type = CategoryTypeField()
 
     group = fields.Nested(GroupSchema, dump_only=True)
-    group_id = fields.Int(required=True, load_only=True, load_from='group')
 
     parent = fields.Nested('self', dump_only=True, exclude=('parent', ))
     parent_id = fields.Int(load_only=True, load_from='parent')

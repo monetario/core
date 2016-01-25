@@ -14,20 +14,36 @@ class GroupCategoriesTest(BaseTestCase):
     def setUp(self):
         super().setUp()
 
-        self.user = UserFactory.create()
-        db.session.add(self.user)
-
         self.group = GroupFactory.create()
         db.session.add(self.group)
 
+        self.group_another = GroupFactory.create()
+        db.session.add(self.group_another)
+
+        db.session.commit()
+
+        self.user = UserFactory.create()
+        self.user.group = self.group
+        db.session.add(self.user)
+
+        self.user_another = UserFactory.create()
+        self.user_another.group = self.group_another
+        db.session.add(self.user_another)
+
+        db.session.commit()
+
         self.group_categories = GroupCategoryFactory.create_batch(30)
         for group_category in self.group_categories:
+            group_category.group = self.group
             db.session.add(group_category)
 
         db.session.commit()
 
         self.api_app = self.create_api_app(self.user)
         self.token = self.get_token(self.api_app, self.user)
+
+        self.api_app_another = self.create_api_app(self.user_another)
+        self.token_another = self.get_token(self.api_app_another, self.user_another)
 
     def test_create_new_group_category_missing_name(self):
         response = self.client.post(
@@ -50,7 +66,6 @@ class GroupCategoriesTest(BaseTestCase):
             data=json.dumps({
                 'name': 'Subgroup_category 1',
                 'parent': self.group_categories[-1].id + 100,
-                'group': self.group.id
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token}
@@ -63,32 +78,12 @@ class GroupCategoriesTest(BaseTestCase):
         self.assertIn('parent', data['errors'])
         self.assertIn('Parent group_category with this id does not exist', data['errors']['parent'])
 
-    def test_create_new_group_category_wrong_group(self):
-        response = self.client.post(
-            url_for('api.v1.add_group_category'),
-            data=json.dumps({
-                'name': 'Subgroup_category 1',
-                'parent': self.group_categories[-1].id + 100,
-                'group': self.group.id + 100
-            }),
-            content_type='application/json',
-            headers={'Authentication-Token': self.token}
-        )
-        self.assertEqual(response.status_code, 400)
-
-        data = json.loads(response.data.decode('utf-8'))
-
-        self.assertIn('errors', data)
-        self.assertIn('group', data['errors'])
-        self.assertIn('Group with this id does not exist', data['errors']['group'])
-
     def test_create_new_group_category_wrong_token(self):
         response = self.client.post(
             url_for('api.v1.add_group_category'),
             data=json.dumps({
                 'name': 'Subgroup_category 1',
                 'parent': self.group_categories[-1].id,
-                'group': self.group.id
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token + 'w'}
@@ -101,7 +96,6 @@ class GroupCategoriesTest(BaseTestCase):
             data=json.dumps({
                 'name': 'Smiths',
                 'parent': self.group_categories[0].id,
-                'group': self.group.id
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token}
@@ -121,7 +115,6 @@ class GroupCategoriesTest(BaseTestCase):
             data=json.dumps({
                 'name': 'Transport',
                 'parent': self.group_categories[-1].id + 100,
-                'group': self.group.id
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token}
@@ -134,24 +127,17 @@ class GroupCategoriesTest(BaseTestCase):
         self.assertIn('parent', data['errors'])
         self.assertIn('Parent group_category with this id does not exist', data['errors']['parent'])
 
-    def test_update_group_category_wrong_group(self):
+    def test_update_group_category_wrong_user(self):
         response = self.client.put(
             url_for('api.v1.edit_group_category', group_category_id=self.group_categories[1].id),
             data=json.dumps({
                 'name': 'Transport',
                 'parent': self.group_categories[-1].id,
-                'group': self.group.id + 100
             }),
             content_type='application/json',
-            headers={'Authentication-Token': self.token}
+            headers={'Authentication-Token': self.token_another}
         )
-        self.assertEqual(response.status_code, 400)
-
-        data = json.loads(response.data.decode('utf-8'))
-
-        self.assertIn('errors', data)
-        self.assertIn('group', data['errors'])
-        self.assertIn('Group with this id does not exist', data['errors']['group'])
+        self.assertEqual(response.status_code, 404)
 
     def test_update_group_category_wrong_token(self):
         response = self.client.put(
@@ -159,7 +145,6 @@ class GroupCategoriesTest(BaseTestCase):
             data=json.dumps({
                 'name': 'Transport',
                 'parent': self.group_categories[-1].id,
-                'group': self.group.id
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token + 'w'}
@@ -172,7 +157,6 @@ class GroupCategoriesTest(BaseTestCase):
             data=json.dumps({
                 'name': 'Groceries',
                 'parent': self.group_categories[0].id,
-                'group': self.group.id
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token}
@@ -185,6 +169,7 @@ class GroupCategoriesTest(BaseTestCase):
         self.assertEqual(data['name'], 'Groceries')
         self.assertEqual(data['parent']['id'], self.group_categories[0].id)
         self.assertEqual(data['parent']['name'], self.group_categories[0].name)
+        self.assertEqual(data['group']['id'], self.group.id)
 
     def test_delete_group_category_wrong_token(self):
         url = url_for('api.v1.delete_group_category', group_category_id=self.group_categories[0].id)
@@ -192,6 +177,15 @@ class GroupCategoriesTest(BaseTestCase):
             url, content_type='application/json', headers={'Authentication-Token': self.token + 'w'}
         )
         self.assertEqual(response.status_code, 401)
+
+    def test_delete_group_category_wrong_user(self):
+        url = url_for('api.v1.delete_group_category', group_category_id=self.group_categories[0].id)
+        response = self.client.delete(
+            url,
+            content_type='application/json',
+            headers={'Authentication-Token': self.token_another}
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_delete_group_category(self):
         url = url_for('api.v1.delete_group_category', group_category_id=self.group_categories[0].id)
@@ -212,6 +206,14 @@ class GroupCategoriesTest(BaseTestCase):
             headers={'Authentication-Token': self.token + 'w'}
         )
         self.assertEqual(response.status_code, 401)
+
+    def test_get_group_category_wrong_user(self):
+        response = self.client.get(
+            url_for('api.v1.get_group_category', group_category_id=self.group_categories[0].id),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token_another}
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_get_group_category(self):
         response = self.client.get(
@@ -240,6 +242,22 @@ class GroupCategoriesTest(BaseTestCase):
             headers={'Authentication-Token': self.token + 'w'}
         )
         self.assertEqual(response.status_code, 401)
+
+    def test_get_group_categories_wrong_user(self):
+        response = self.client.get(
+            url_for('api.v1.get_group_categories'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token_another}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('meta', data)
+        self.assertEqual(data['meta']['total'], 0)
+
+        self.assertIn('objects', data)
+        self.assertEqual(len(data['objects']), 0)
 
     def test_get_group_categories(self):
         per_page = 10
