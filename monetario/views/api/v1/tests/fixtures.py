@@ -2,12 +2,13 @@ import os
 import binascii
 import datetime
 from random import choice
+from pytz import UTC
 
 
 import factory
 import pycountry
 from factory.fuzzy import FuzzyDecimal
-from factory.fuzzy import FuzzyDate
+from factory.fuzzy import FuzzyDateTime
 from factory.fuzzy import FuzzyText
 
 from monetario.models import Group
@@ -70,7 +71,10 @@ class RecordFactory(factory.Factory):
         model = Record
 
     amount = FuzzyDecimal(10, 10000, 2)
-    date = FuzzyDate(datetime.date(2008, 1, 1), datetime.date(2016, 1, 1))
+    date = FuzzyDateTime(
+        datetime.datetime(2008, 1, 1, 0, 0, tzinfo=UTC),
+        datetime.datetime(2016, 1, 1, 0, 0, tzinfo=UTC)
+    )
 
 
 class AppFactory(factory.Factory):

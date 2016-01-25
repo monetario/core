@@ -95,12 +95,11 @@ class RecordSchema(Schema):
     description = fields.Str()
     record_type = RecordTypeField()
     payment_method = PaymentMethodField()
-    date = fields.Date()
+    date = fields.DateTime()
 
     user = fields.Nested(
         UserSchema, dump_only=True, only=('id', 'first_name', 'last_name', 'email')
     )
-    user_id = fields.Int(required=True, load_only=True, load_from='user')
 
     account = fields.Nested(AccountSchema, dump_only=True, only=('id', 'name'))
     account_id = fields.Int(required=True, load_only=True, load_from='account')

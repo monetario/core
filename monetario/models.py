@@ -321,7 +321,7 @@ class Record(db.Model):
     payment_method = db.Column(
         db.Integer, default=PAYMENT_METHOD_DEBIT_CARD
     )  # cash, debet card, mobile, internet payment
-    date = db.Column(db.DateTime, default=datetime.now, index=True)
+    date = db.Column(db.DateTime(timezone=True), default=datetime.utcnow(), index=True)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user = db.relationship(User, backref='records')
