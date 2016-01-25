@@ -84,7 +84,6 @@ class AccountSchema(Schema):
     currency_id = fields.Int(required=True, load_only=True, load_from='currency')
 
     user = fields.Nested(UserSchema, dump_only=True)
-    user_id = fields.Int(required=True, load_only=True, load_from='user')
 
 
 class RecordSchema(Schema):

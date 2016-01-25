@@ -33,10 +33,18 @@ def get_group_currencies():
 @login_required
 @jsonify()
 def get_group_currency(group_currency_id):
-    return GroupCurrency.query.filter(
-        GroupCurrency.id == group_currency_id,
-        GroupCurrency.group_id == current_user.group_id
-    ).first_or_404()
+    return (
+        GroupCurrency.query
+        .options(
+            db.contains_eager(GroupCurrency.group),
+        )
+        .join(Group, Group.id == GroupCurrency.group_id)
+        .filter(
+            GroupCurrency.id == group_currency_id,
+            GroupCurrency.group_id == current_user.group_id
+        )
+        .first_or_404()
+    )
 
 
 @bp.route('/group_currencies/<int:group_currency_id>/', methods=['DELETE'])

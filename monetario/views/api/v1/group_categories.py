@@ -33,10 +33,18 @@ def get_group_categories():
 @login_required
 @jsonify()
 def get_group_category(group_category_id):
-    return GroupCategory.query.filter(
-        GroupCategory.id == group_category_id,
-        GroupCategory.group_id == current_user.group_id
-    ).first_or_404()
+    return (
+        GroupCategory.query
+        .options(
+            db.contains_eager(GroupCategory.group),
+        )
+        .join(Group, Group.id == GroupCategory.group_id)
+        .filter(
+            GroupCategory.id == group_category_id,
+            GroupCategory.group_id == current_user.group_id
+        )
+        .first_or_404()
+    )
 
 
 @bp.route('/group_categories/<int:group_category_id>/', methods=['DELETE'])

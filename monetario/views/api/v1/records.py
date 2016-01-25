@@ -41,12 +41,15 @@ def get_records():
 def get_record(record_id):
     return (
         Record.query
-        .filter(Record.id == record_id, Record.user_id == current_user.id)
         .options(
             db.contains_eager(Record.account),
             db.contains_eager(Record.category),
             db.contains_eager(Record.currency)
         )
+        .join(Account, Account.id == Record.account_id)
+        .join(GroupCategory, GroupCategory.id == Record.category_id)
+        .join(GroupCurrency, GroupCurrency.id == Record.currency_id)
+        .filter(Record.id == record_id, Record.user_id == current_user.id)
         .first_or_404()
     )
 
