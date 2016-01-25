@@ -74,7 +74,6 @@ class GroupCurrencySchema(Schema):
     date_modified = fields.DateTime()
 
     group = fields.Nested(GroupSchema, dump_only=True)
-    group_id = fields.Int(required=True, load_only=True, load_from='group')
 
 
 class AccountSchema(Schema):

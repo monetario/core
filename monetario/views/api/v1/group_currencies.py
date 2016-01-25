@@ -3,6 +3,7 @@ import json
 
 from flask import request
 from flask_login import login_required
+from flask_login import current_user
 
 from monetario.models import db
 from monetario.models import Group
@@ -18,22 +19,34 @@ from monetario.views.api.decorators import collection
 @jsonify()
 @collection(GroupCurrency)
 def get_group_currencies():
-    return GroupCurrency.query
+    return (
+        GroupCurrency.query
+        .options(
+            db.contains_eager(GroupCurrency.group),
+        )
+        .join(Group, Group.id == GroupCurrency.group_id)
+        .filter(GroupCurrency.group_id == current_user.group_id)
+    )
 
 
 @bp.route('/group_currencies/<int:group_currency_id>/', methods=['GET'])
 @login_required
 @jsonify()
 def get_group_currency(group_currency_id):
-    group_currency = GroupCurrency.query.get_or_404(group_currency_id)
-    return group_currency
+    return GroupCurrency.query.filter(
+        GroupCurrency.id == group_currency_id,
+        GroupCurrency.group_id == current_user.group_id
+    ).first_or_404()
 
 
 @bp.route('/group_currencies/<int:group_currency_id>/', methods=['DELETE'])
 @login_required
 @jsonify()
 def delete_group_currency(group_currency_id):
-    group_currency = GroupCurrency.query.get_or_404(group_currency_id)
+    group_currency = GroupCurrency.query.filter(
+        GroupCurrency.id == group_currency_id,
+        GroupCurrency.group_id == current_user.group_id
+    ).first_or_404()
 
     db.session.delete(group_currency)
     db.session.commit()
@@ -50,14 +63,9 @@ def add_group_currency():
     if group_currency_schema.errors:
         return {'errors': group_currency_schema.errors}, 400
 
-    group = Group.query.filter(
-        Group.id == group_currency_schema.data['group_id']
-    ).first()
-
-    if not group:
-        return {'errors': {'group': 'Group with this id does not exist'}}, 400
-
     group_currency = GroupCurrency(**group_currency_schema.data)
+    group_currency.group_id = current_user.group_id
+
     db.session.add(group_currency)
     db.session.commit()
 
@@ -68,7 +76,10 @@ def add_group_currency():
 @login_required
 @jsonify()
 def edit_group_currency(group_currency_id):
-    group_currency = GroupCurrency.query.get_or_404(group_currency_id)
+    group_currency = GroupCurrency.query.filter(
+        GroupCurrency.id == group_currency_id,
+        GroupCurrency.group_id == current_user.group_id
+    ).first_or_404()
 
     group_currency_schema = GroupCurrency.from_json(json.loads(request.data.decode('utf-8')),
                                                     partial=True)
