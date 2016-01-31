@@ -110,27 +110,50 @@ def get_pagination(model, query, max_per_page=10, **kwargs):
     pages = {'page': page, 'per_page': per_page,
              'total': p.total, 'pages': p.pages}
     if p.has_prev:
-        pages['prev_url'] = url_for(request.endpoint, page=p.prev_num,
-                                    per_page=per_page,
-                                    expand=expand, _external=True,
-                                    **kwargs)
+        pages['prev_url'] = url_for(
+            request.endpoint,
+            filter=filter,
+            sort=sort,
+            page=p.prev_num,
+            per_page=per_page,
+            expand=expand,
+            _external=True,
+            **kwargs
+        )
     else:
         pages['prev_url'] = None
     if p.has_next:
-        pages['next_url'] = url_for(request.endpoint, filter=filter,
-                                    sort=sort, page=p.next_num,
-                                    per_page=per_page,
-                                    expand=expand, _external=True,
-                                    **kwargs)
+        pages['next_url'] = url_for(
+            request.endpoint,
+            filter=filter,
+            sort=sort,
+            page=p.next_num,
+            per_page=per_page,
+            expand=expand,
+            _external=True,
+            **kwargs
+        )
     else:
         pages['next_url'] = None
-    pages['first_url'] = url_for(request.endpoint, filter=filter,
-                                 sort=sort, page=1, per_page=per_page,
-                                 expand=expand, _external=True,
-                                 **kwargs)
-    pages['last_url'] = url_for(request.endpoint, filter=filter,
-                                sort=sort, page=p.pages or 1,
-                                per_page=per_page, expand=expand,
-                                _external=True, **kwargs)
+    pages['first_url'] = url_for(
+        request.endpoint,
+        filter=filter,
+        sort=sort,
+        page=1,
+        per_page=per_page,
+        expand=expand,
+        _external=True,
+        **kwargs
+    )
+    pages['last_url'] = url_for(
+        request.endpoint,
+        filter=filter,
+        sort=sort,
+        page=p.pages or 1,
+        per_page=per_page,
+        expand=expand,
+        _external=True,
+        **kwargs
+    )
 
     return p, pages
