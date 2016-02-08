@@ -127,7 +127,29 @@ class BalanceSchema(Schema):
     cash_flow = fields.Float(required=True)
     start_balance = fields.Float()
     end_balance = fields.Float()
-    outcome = fields.Float()
+    expense = fields.Float()
     income = fields.Float()
     date = fields.Date()
     record_type = fields.Int()
+
+
+class DateRangeFilterSchema(Schema):
+    date_from = fields.Date()
+    date_to = fields.Date()
+
+
+class CashFlowSchema(Schema):
+    cash_flow = fields.Float(required=True)
+    expense = fields.Float()
+    income = fields.Float()
+    date = fields.Date()
+
+
+class ExpenseSchema(Schema):
+    amount = fields.Float(required=True)
+    category_id = fields.Int()
+
+
+class IncomeSchema(Schema):
+    amount = fields.Float(required=True)
+    category_id = fields.Int()
