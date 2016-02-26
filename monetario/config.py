@@ -24,11 +24,13 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    SQLALCHEMY_ECHO = True
 
 
 class TestingConfig(Config):
-    TESTING = True
+    DEBUG = True
     SQLALCHEMY_DATABASE_URI = "sqlite://"
+    SQLALCHEMY_ECHO = False
 
 
 class ProductionConfig(Config):

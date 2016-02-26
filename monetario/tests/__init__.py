@@ -18,8 +18,7 @@ class BaseTestCase(TestCase):
         db.drop_all()
 
     def create_app(self):
-        app = create_app()
-        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
+        app = create_app('testing')
         app.config['TESTING'] = True
         return app
 

@@ -18,14 +18,24 @@ from monetario.views.api.decorators import collection
 @jsonify()
 @collection(User)
 def get_users():
-    return User.query
+    return (
+        User.query
+        .options(db.contains_eager(User.group))
+        .join(Group, Group.id == User.group_id)
+    )
 
 
 @bp.route('/users/<int:user_id>/', methods=['GET'])
 @login_required
 @jsonify()
 def get_user(user_id):
-    return User.query.get_or_404(user_id)
+    return (
+        User.query
+        .options(db.contains_eager(User.group))
+        .join(Group, Group.id == User.group_id)
+        .filter(User.id == user_id)
+        .first_or_404()
+    )
 
 
 @bp.route('/users/<int:user_id>/', methods=['DELETE'])

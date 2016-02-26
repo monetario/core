@@ -18,6 +18,7 @@ class UsersTest(BaseTestCase):
 
         self.users = UserFactory.create_batch(30)
         for user in self.users:
+            user.group = self.group
             db.session.add(user)
 
         db.session.commit()
