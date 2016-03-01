@@ -22,7 +22,7 @@ class TokensTest(BaseTestCase):
         self.token = self.get_token(self.api_app, self.user)
 
     def test_get_token_wrong_email(self):
-        response = self.client.get(
+        response = self.client.post(
             url_for('api.v1.get_token'),
             data=json.dumps({
                 'email': self.user.email + '1',
@@ -34,7 +34,7 @@ class TokensTest(BaseTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_get_token_wrong_password(self):
-        response = self.client.get(
+        response = self.client.post(
             url_for('api.v1.get_token'),
             data=json.dumps({
                 'email': self.user.email,
@@ -46,7 +46,7 @@ class TokensTest(BaseTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_get_token_wrong_secret(self):
-        response = self.client.get(
+        response = self.client.post(
             url_for('api.v1.get_token'),
             data=json.dumps({
                 'email': self.user.email,
@@ -62,7 +62,7 @@ class TokensTest(BaseTestCase):
 
         self.assertEqual(response.status_code, 401)
 
-        response = self.client.get(
+        response = self.client.post(
             url_for('api.v1.get_token'),
             data=json.dumps({
                 'email': self.user.email,

@@ -12,7 +12,7 @@ from monetario.views.api.v1 import bp
 from monetario.views.api.decorators import jsonify
 
 
-@bp.route('/token/', methods=['GET'])
+@bp.route('/token/', methods=['POST'])
 @jsonify()
 def get_token():
     token_schema = Token.from_json(json.loads(request.data.decode('utf-8')))
