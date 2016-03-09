@@ -37,7 +37,7 @@ class UserSchema(Schema):
     active = fields.Bool()
 
     group = fields.Nested(GroupSchema, dump_only=True)
-    group_id = fields.Int(required=True, load_only=True, load_from='group')
+    invite_hash = fields.Str()
 
     date_created = fields.DateTime(dump_only=True)
     date_modified = fields.DateTime(dump_only=True)

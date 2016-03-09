@@ -1,6 +1,7 @@
 FROM python:3.5
 MAINTAINER Sergey Nuzhdin <ipaq.lw@gmail.com>
 
+RUN mkdir -p '/opt/monetario/core'
 VOLUME ['/opt/monetario/core']
 
 WORKDIR /opt/monetario/core

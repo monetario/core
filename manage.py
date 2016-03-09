@@ -23,6 +23,14 @@ manager.add_command("shell", Shell(make_context=make_shell_context))
 manager.add_command('db', MigrateCommand)
 
 
+API_APPS = [
+    {
+        'name': 'WEB',
+        'secret': 'eyJpYXQiOjE0NTc1NTc0MDYsImV4cCI6MTYxNTIzNzQwNiwiYWxnIjoiSFMyNTYifQ.eyJpZCI6MX0.FIVRju7qroqF1UYFG3d8e_gAUVQbzHWmjjAhgrl4KKw',
+    }
+]
+
+
 @manager.command
 def test():
     """Run the unit tests."""
@@ -69,6 +77,24 @@ def create_api_app():
     db.session.commit()
 
     sys.exit('\nApp "{}" was created with secret "{}"'.format(name, api_app.secret))
+
+
+@manager.command
+def insert_api_apps():
+    """
+    Insert API applications with secret keys.
+    """
+
+    for x in API_APPS:
+        api_app = App.query.filter(App.name == x['name']).first()
+
+        if not api_app:
+            api_app = App(name=x['name'])
+
+            api_app.secret = x['secret']
+            db.session.add(api_app)
+
+    db.session.commit()
 
 
 if __name__ == '__main__':

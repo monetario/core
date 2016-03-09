@@ -1,5 +1,6 @@
 
 import json
+import uuid
 
 from flask import request
 from flask_login import login_required
@@ -58,16 +59,17 @@ def add_user():
     if user_schema.errors:
         return {'errors': user_schema.errors}, 400
 
-    group = Group.query.filter(Group.id == user_schema.data['group_id']).first()
-    if not group:
-        return {'errors': {'group': 'Group with this id does not exist'}}, 400
-
     email_duplicate_user = User.query.filter(User.email == user_schema.data['email']).first()
 
     if email_duplicate_user:
         return {'errors': {'email': 'User with this email is already exists'}}, 400
 
+    group = Group(name=str(uuid.uuid4()))
+    db.session.add(group)
+    db.session.commit()
+
     user = User(**user_schema.data)
+    user.group = group
     db.session.add(user)
     db.session.commit()
 
