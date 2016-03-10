@@ -45,7 +45,9 @@ class CategoriesTest(BaseTestCase):
             url_for('api.v1.add_category'),
             data=json.dumps({
                 'name': 'Subcategory 1',
-                'parent': self.categories[-1].id + 100
+                'parent': self.categories[-1].id + 100,
+                'colour': '#ffccdd',
+                'logo': 'fa-paint-brush',
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token}
@@ -70,12 +72,52 @@ class CategoriesTest(BaseTestCase):
         )
         self.assertEqual(response.status_code, 401)
 
+    def test_create_new_category_missing_logo(self):
+        response = self.client.post(
+            url_for('api.v1.add_category'),
+            data=json.dumps({
+                'name': 'Subcategory 1',
+                'parent': self.categories[-1].id,
+                'colour': '#ffccdd',
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('logo', data['errors'])
+        self.assertIn('Missing data for required field.', data['errors']['logo'])
+
+    def test_create_new_category_missing_colour(self):
+        response = self.client.post(
+            url_for('api.v1.add_category'),
+            data=json.dumps({
+                'name': 'Subcategory 1',
+                'parent': self.categories[-1].id,
+                'logo': 'fa-paint-brush',
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('colour', data['errors'])
+        self.assertIn('Missing data for required field.', data['errors']['colour'])
+
     def test_create_new_category(self):
         response = self.client.post(
             url_for('api.v1.add_category'),
             data=json.dumps({
                 'name': 'Smiths',
-                'parent': self.categories[0].id
+                'parent': self.categories[0].id,
+                'colour': '#ffccdd',
+                'logo': 'fa-paint-brush',
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token}
@@ -124,7 +166,9 @@ class CategoriesTest(BaseTestCase):
             url_for('api.v1.edit_category', category_id=self.categories[1].id),
             data=json.dumps({
                 'name': 'Groceries',
-                'parent': self.categories[0].id
+                'parent': self.categories[0].id,
+                'colour': '#ffccdd',
+                'logo': 'fa-paint-brush',
             }),
             content_type='application/json',
             headers={'Authentication-Token': self.token}

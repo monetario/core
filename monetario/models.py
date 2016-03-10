@@ -166,6 +166,7 @@ class Category(db.Model):
     category_type = db.Column(db.Integer, default=CATEGORY_TYPE_OUTCOME)  # income or outcome
     parent_id = db.Column(db.Integer, db.ForeignKey('category.id'), index=True)
     parent = db.relationship('Category', remote_side=[id])
+    colour = db.Column(db.String(64), index=True)
     logo = db.Column(db.String(255), index=True)
 
     def __repr__(self):
@@ -200,6 +201,7 @@ class GroupCategory(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('group_category.id'), index=True)
     parent = db.relationship('GroupCategory', remote_side=[id])
 
+    colour = db.Column(db.String(64), index=True)
     logo = db.Column(db.String(255), index=True)
 
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'), index=True)

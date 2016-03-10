@@ -52,6 +52,9 @@ class CategorySchema(Schema):
     parent = fields.Nested('self', dump_only=True, exclude=('parent', ))
     parent_id = fields.Int(load_only=True, load_from='parent')
 
+    colour = fields.Str(required=True)
+    logo = fields.Str(required=True)
+
 
 class GroupCategorySchema(Schema):
     id = fields.Int(dump_only=True)
@@ -62,6 +65,9 @@ class GroupCategorySchema(Schema):
 
     parent = fields.Nested('self', dump_only=True, exclude=('parent', ))
     parent_id = fields.Int(load_only=True, load_from='parent')
+
+    colour = fields.Str(required=True)
+    logo = fields.Str(required=True)
 
 
 class GroupCurrencySchema(Schema):
