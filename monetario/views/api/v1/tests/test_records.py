@@ -339,6 +339,38 @@ class RecordsTest(BaseTestCase):
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('amount', data)
+        self.assertIn('description', data)
+        self.assertIn('record_type', data)
+        self.assertIn('payment_method', data)
+        self.assertIn('account', data)
+        self.assertIn('currency', data)
+        self.assertIn('user', data)
+        self.assertIn('category', data)
+        self.assertIn('date', data)
+
+        self.assertIn('title', data['record_type'])
+        self.assertIn('value', data['record_type'])
+
+        self.assertIn('title', data['payment_method'])
+        self.assertIn('value', data['payment_method'])
+
+        self.assertIn('id', data['account'])
+        self.assertIn('name', data['account'])
+
+        self.assertIn('id', data['currency'])
+        self.assertIn('name', data['currency'])
+
+        self.assertIn('id', data['user'])
+        self.assertIn('first_name', data['user'])
+        self.assertIn('last_name', data['user'])
+        self.assertIn('email', data['user'])
+
+        self.assertIn('id', data['category'])
+        self.assertIn('name', data['category'])
+        self.assertIn('logo', data['category'])
+        self.assertIn('colour', data['category'])
         # print('X' * 100, data['date'], self.records[0].date.isoformat(), str(self.records[0].date))
         # self.assertEqual(data['date'], self.records[0].date.isoformat())
 

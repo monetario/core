@@ -110,7 +110,9 @@ class RecordSchema(Schema):
     currency = fields.Nested(GroupCurrencySchema, dump_only=True, only=('id', 'name'))
     currency_id = fields.Int(required=True, load_only=True, load_from='currency')
 
-    category = fields.Nested(GroupCategorySchema, dump_only=True, only=('id', 'name'))
+    category = fields.Nested(
+        GroupCategorySchema, dump_only=True, only=('id', 'name', 'logo', 'colour')
+    )
     category_id = fields.Int(required=True, load_only=True, load_from='category')
 
 
