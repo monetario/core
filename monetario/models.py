@@ -294,10 +294,12 @@ class Record(db.Model):
     (
         RECORD_TYPE_INCOME,
         RECORD_TYPE_EXPENSE,
-        RECORD_TYPE_TRANSACTION,
-    ) = range(3)
+    ) = range(2)
 
-    RECORD_TYPES = [(RECORD_TYPE_INCOME, 'Income'), (RECORD_TYPE_EXPENSE, 'Expense')]
+    RECORD_TYPES = [
+        (RECORD_TYPE_INCOME, 'Income'),
+        (RECORD_TYPE_EXPENSE, 'Expense'),
+    ]
 
     (
         PAYMENT_METHOD_CASH,

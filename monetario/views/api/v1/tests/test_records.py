@@ -22,7 +22,9 @@ class RecordsTest(BaseTestCase):
         super().setUp()
 
         self.account = AccountFactory.create()
+        self.target_account = AccountFactory.create()
         db.session.add(self.account)
+        db.session.add(self.target_account)
 
         self.category = GroupCategoryFactory.create()
         db.session.add(self.category)
@@ -46,9 +48,7 @@ class RecordsTest(BaseTestCase):
             record.user = self.user
 
             db.session.add(record)
-        # print(">>>>>>>>>>", self.records[0].date)
         db.session.commit()
-        # print("<<<<<<<<<<", self.records[0].date)
 
         self.api_app = self.create_api_app(self.user)
         self.token = self.get_token(self.api_app, self.user)
@@ -329,6 +329,8 @@ class RecordsTest(BaseTestCase):
 
         self.assertIn('amount', data)
         self.assertEqual(data['amount'], 99.5)
+        self.assertEqual(data['record_type']['value'], self.records[1].record_type)
+        self.assertEqual(data['payment_method']['value'], self.records[1].payment_method)
         self.assertEqual(data['user']['id'], self.user.id)
         self.assertEqual(data['currency']['id'], self.currency.id)
         self.assertEqual(data['user']['id'], self.user.id)
@@ -352,6 +354,8 @@ class RecordsTest(BaseTestCase):
 
         self.assertIn('amount', data)
         self.assertEqual(data['amount'], -199.9)
+        self.assertEqual(data['record_type']['value'], self.records[1].record_type)
+        self.assertEqual(data['payment_method']['value'], self.records[1].payment_method)
         self.assertEqual(data['user']['id'], self.user.id)
         self.assertEqual(data['currency']['id'], self.currency.id)
         self.assertEqual(data['user']['id'], self.user.id)

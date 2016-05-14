@@ -1,5 +1,4 @@
-import os
-import binascii
+import random
 import datetime
 from random import choice
 from pytz import UTC
@@ -71,6 +70,10 @@ class RecordFactory(factory.Factory):
         model = Record
 
     amount = FuzzyDecimal(10, 10000, 2)
+    record_type = factory.LazyAttribute(lambda n: random.randint(0, len(Record.RECORD_TYPES) - 1))
+    payment_method = factory.LazyAttribute(
+        lambda n: random.randint(0, len(Record.PAYMENT_METHODS) - 1)
+    )
     date = FuzzyDateTime(
         datetime.datetime(2008, 1, 1, 0, 0, tzinfo=UTC),
         datetime.datetime(2016, 1, 1, 0, 0, tzinfo=UTC)

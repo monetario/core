@@ -31,6 +31,7 @@ def get_accounts():
         .filter(Account.user_id == current_user.id)
     )
 
+
 @bp.route('/accounts/<int:account_id>/', methods=['GET'])
 @login_required
 @jsonify()

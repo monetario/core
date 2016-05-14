@@ -77,28 +77,28 @@ def add_record():
     if record_schema.errors:
         return {'errors': record_schema.errors}, 400
 
-    account = Account.query.filter(Account.id == record_schema.data['account_id']).first()
+    record_data = record_schema.data
+    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
+        record_data['amount'] = 0 - record_data['amount']
+
+    account = Account.query.filter(Account.id == record_data['account_id']).first()
 
     if not account:
         return {'errors': {'account': 'Account with this id does not exist'}}, 400
 
     category = GroupCategory.query.filter(
-        GroupCategory.id == record_schema.data['category_id']
+        GroupCategory.id == record_data['category_id']
     ).first()
 
     if not category:
         return {'errors': {'category': 'GroupCategory with this id does not exist'}}, 400
 
     currency = GroupCurrency.query.filter(
-        GroupCurrency.id == record_schema.data['currency_id']
+        GroupCurrency.id == record_data['currency_id']
     ).first()
 
     if not currency:
         return {'errors': {'currency': 'Group currency with this id does not exist'}}, 400
-
-    record_data = record_schema.data
-    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
-        record_data['amount'] = 0 - record_data['amount']
 
     record = Record(**record_data)
     record.user = current_user
@@ -122,33 +122,34 @@ def edit_record(record_id):
     if record_schema.errors:
         return {'errors': record_schema.errors}, 400
 
-    if 'account_id' in record_schema.data:
-        account = Account.query.filter(Account.id == record_schema.data['account_id']).first()
+    record_data = record_schema.data
+
+    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
+        record_data['amount'] = 0 - record_data['amount']
+
+    if 'account_id' in record_data:
+        account = Account.query.filter(Account.id == record_data['account_id']).first()
 
         if not account:
             return {'errors': {'account': 'Account with this id does not exist'}}, 400
 
-    if 'category_id' in record_schema.data:
+    if 'category_id' in record_data:
         category = GroupCategory.query.filter(
-            GroupCategory.id == record_schema.data['category_id']
+            GroupCategory.id == record_data['category_id']
         ).first()
 
         if not category:
             return {'errors': {'category': 'GroupCategory with this id does not exist'}}, 400
 
-    if 'currency_id' in record_schema.data:
+    if 'currency_id' in record_data:
         currency = GroupCurrency.query.filter(
-            GroupCurrency.id == record_schema.data['currency_id']
+            GroupCurrency.id == record_data['currency_id']
         ).first()
 
         if not currency:
             return {'errors': {'currency': 'Group currency with this id does not exist'}}, 400
 
-    record_data = record_schema.data
-    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
-        record_data['amount'] = 0 - record_data['amount']
-
-    for field, value in record_schema.data.items():
+    for field, value in record_data.items():
         if hasattr(record, field):
             setattr(record, field, value)
 
