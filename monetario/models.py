@@ -293,10 +293,11 @@ class Record(db.Model):
 
     (
         RECORD_TYPE_INCOME,
-        RECORD_TYPE_OUTCOME,
-    ) = range(2)
+        RECORD_TYPE_EXPENSE,
+        RECORD_TYPE_TRANSACTION,
+    ) = range(3)
 
-    RECORD_TYPES = [(RECORD_TYPE_INCOME, 'Income'), (RECORD_TYPE_OUTCOME, 'Outcome')]
+    RECORD_TYPES = [(RECORD_TYPE_INCOME, 'Income'), (RECORD_TYPE_EXPENSE, 'Expense')]
 
     (
         PAYMENT_METHOD_CASH,
@@ -319,7 +320,7 @@ class Record(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Numeric(13, 4))
     description = db.Column(db.Text, index=True)
-    record_type = db.Column(db.Integer, default=RECORD_TYPE_OUTCOME)  # income or outcome
+    record_type = db.Column(db.Integer, default=RECORD_TYPE_EXPENSE)
     payment_method = db.Column(
         db.Integer, default=PAYMENT_METHOD_DEBIT_CARD
     )  # cash, debet card, mobile, internet payment

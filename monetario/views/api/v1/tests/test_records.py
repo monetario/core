@@ -1,10 +1,11 @@
 import json
-from pytz import UTC
+# from pytz import UTC
 
 from flask import url_for
 
 from monetario.app import db
 
+from monetario.models import Record
 from monetario.views.api.v1.tests.fixtures import AccountFactory
 from monetario.views.api.v1.tests.fixtures import GroupCurrencyFactory
 from monetario.views.api.v1.tests.fixtures import GroupCategoryFactory
@@ -70,11 +71,32 @@ class RecordsTest(BaseTestCase):
         self.assertIn('amount', data['errors'])
         self.assertIn('Missing data for required field.', data['errors']['amount'])
 
+    def test_create_new_record_missing_record_type(self):
+        response = self.client.post(
+            url_for('api.v1.add_record'),
+            data=json.dumps({
+                'amount': 100,
+                'currency': self.currency.id,
+                'account': self.account.id,
+                'category': self.category.id,
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('record_type', data['errors'])
+        self.assertIn('Missing data for required field.', data['errors']['record_type'])
+
     def test_create_new_record_wrong_currency(self):
         response = self.client.post(
             url_for('api.v1.add_record'),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id + 10,
                 'account': self.account.id,
                 'category': self.category.id,
@@ -95,6 +117,7 @@ class RecordsTest(BaseTestCase):
             url_for('api.v1.add_record'),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id,
                 'account': self.account.id,
                 'category': self.category.id + 100,
@@ -115,6 +138,7 @@ class RecordsTest(BaseTestCase):
             url_for('api.v1.add_record'),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id,
                 'account': self.account.id + 100,
                 'category': self.category.id,
@@ -135,6 +159,7 @@ class RecordsTest(BaseTestCase):
             url_for('api.v1.add_record'),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id,
                 'account': self.account.id,
                 'category': self.category.id,
@@ -144,11 +169,12 @@ class RecordsTest(BaseTestCase):
         )
         self.assertEqual(response.status_code, 401)
 
-    def test_create_new_record(self):
+    def test_create_new_record_income(self):
         response = self.client.post(
             url_for('api.v1.add_record'),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_INCOME,
                 'currency': self.currency.id,
                 'account': self.account.id,
                 'category': self.category.id,
@@ -167,11 +193,36 @@ class RecordsTest(BaseTestCase):
         self.assertEqual(data['category']['id'], self.category.id)
         self.assertEqual(data['user']['id'], self.user.id)
 
+    def test_create_new_record_expense(self):
+        response = self.client.post(
+            url_for('api.v1.add_record'),
+            data=json.dumps({
+                'amount': 200,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
+                'currency': self.currency.id,
+                'account': self.account.id,
+                'category': self.category.id,
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
+        )
+        self.assertEqual(response.status_code, 201)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('amount', data)
+        self.assertEqual(data['amount'], -200)
+        self.assertEqual(data['currency']['id'], self.currency.id)
+        self.assertEqual(data['account']['id'], self.account.id)
+        self.assertEqual(data['category']['id'], self.category.id)
+        self.assertEqual(data['user']['id'], self.user.id)
+
     def test_update_record_wrong_currency(self):
         response = self.client.put(
             url_for('api.v1.edit_record', record_id=self.records[1].id),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id + 100,
                 'account': self.account.id,
                 'category': self.category.id,
@@ -192,6 +243,7 @@ class RecordsTest(BaseTestCase):
             url_for('api.v1.edit_record', record_id=self.records[1].id),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id,
                 'account': self.account.id,
                 'category': self.category.id,
@@ -206,6 +258,7 @@ class RecordsTest(BaseTestCase):
             url_for('api.v1.edit_record', record_id=self.records[1].id),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id,
                 'account': self.account.id,
                 'category': self.category.id + 100,
@@ -226,6 +279,7 @@ class RecordsTest(BaseTestCase):
             url_for('api.v1.edit_record', record_id=self.records[1].id),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id,
                 'account': self.account.id + 100,
                 'category': self.category.id,
@@ -246,6 +300,7 @@ class RecordsTest(BaseTestCase):
             url_for('api.v1.edit_record', record_id=self.records[1].id),
             data=json.dumps({
                 'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
                 'currency': self.currency.id,
                 'account': self.account.id,
                 'category': self.category.id,
@@ -255,11 +310,12 @@ class RecordsTest(BaseTestCase):
         )
         self.assertEqual(response.status_code, 401)
 
-    def test_update_record(self):
+    def test_update_record_income(self):
         response = self.client.put(
             url_for('api.v1.edit_record', record_id=self.records[1].id),
             data=json.dumps({
                 'amount': 99.5,
+                'record_type': Record.RECORD_TYPE_INCOME,
                 'currency': self.currency.id,
                 'account': self.account.id,
                 'category': self.category.id,
@@ -273,6 +329,29 @@ class RecordsTest(BaseTestCase):
 
         self.assertIn('amount', data)
         self.assertEqual(data['amount'], 99.5)
+        self.assertEqual(data['user']['id'], self.user.id)
+        self.assertEqual(data['currency']['id'], self.currency.id)
+        self.assertEqual(data['user']['id'], self.user.id)
+
+    def test_update_record_expense(self):
+        response = self.client.put(
+            url_for('api.v1.edit_record', record_id=self.records[1].id),
+            data=json.dumps({
+                'amount': 199.9,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
+                'currency': self.currency.id,
+                'account': self.account.id,
+                'category': self.category.id,
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('amount', data)
+        self.assertEqual(data['amount'], -199.9)
         self.assertEqual(data['user']['id'], self.user.id)
         self.assertEqual(data['currency']['id'], self.currency.id)
         self.assertEqual(data['user']['id'], self.user.id)

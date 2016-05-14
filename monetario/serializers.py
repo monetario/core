@@ -96,7 +96,7 @@ class RecordSchema(Schema):
     id = fields.Int(dump_only=True)
     amount = fields.Float(required=True)
     description = fields.Str()
-    record_type = RecordTypeField()
+    record_type = RecordTypeField(required=True)
     payment_method = PaymentMethodField()
     date = fields.DateTime()
 

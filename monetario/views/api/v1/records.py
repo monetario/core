@@ -96,7 +96,11 @@ def add_record():
     if not currency:
         return {'errors': {'currency': 'Group currency with this id does not exist'}}, 400
 
-    record = Record(**record_schema.data)
+    record_data = record_schema.data
+    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
+        record_data['amount'] = 0 - record_data['amount']
+
+    record = Record(**record_data)
     record.user = current_user
 
     db.session.add(record)
@@ -139,6 +143,10 @@ def edit_record(record_id):
 
         if not currency:
             return {'errors': {'currency': 'Group currency with this id does not exist'}}, 400
+
+    record_data = record_schema.data
+    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
+        record_data['amount'] = 0 - record_data['amount']
 
     for field, value in record_schema.data.items():
         if hasattr(record, field):

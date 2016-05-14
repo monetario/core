@@ -35,7 +35,7 @@ def get_balance(year, month):
             case([(Record.record_type == Record.RECORD_TYPE_INCOME, Record.amount)], else_=0)
         ).label('income'),
         func.sum(
-            case([(Record.record_type == Record.RECORD_TYPE_OUTCOME, Record.amount)], else_=0)
+            case([(Record.record_type == Record.RECORD_TYPE_EXPENSE, Record.amount)], else_=0)
         ).label('expense'),
         func.date_trunc('month', Record.date).label("date"),
     ).filter(
@@ -92,7 +92,7 @@ def get_cash_flows():
             case([(Record.record_type == Record.RECORD_TYPE_INCOME, Record.amount)], else_=0)
         ).label('income'),
         func.sum(
-            case([(Record.record_type == Record.RECORD_TYPE_OUTCOME, Record.amount)], else_=0)
+            case([(Record.record_type == Record.RECORD_TYPE_EXPENSE, Record.amount)], else_=0)
         ).label('expense'),
         func.date_trunc('month', Record.date).label("date"),
     ).group_by(
@@ -154,7 +154,7 @@ def get_expenses():
         func.sum(Record.amount).label("amount"),
         Record.category_id
     ).filter(
-        Record.record_type == Record.RECORD_TYPE_OUTCOME,
+        Record.record_type == Record.RECORD_TYPE_EXPENSE,
     ).group_by(
         Record.category_id
     )
