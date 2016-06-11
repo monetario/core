@@ -92,6 +92,27 @@ class AccountSchema(Schema):
     user = fields.Nested(UserSchema, dump_only=True)
 
 
+class TransactionSchema(Schema):
+    id = fields.Int(dump_only=True)
+    amount = fields.Float(required=True)
+
+    source_account = fields.Nested(AccountSchema, dump_only=True, only=('id', 'name'))
+    source_account_id = fields.Int(required=True, load_only=True, load_from='source_account')
+
+    target_account = fields.Nested(AccountSchema, dump_only=True, only=('id', 'name'))
+    target_account_id = fields.Int(required=True, load_only=True, load_from='target_account')
+
+    user = fields.Nested(
+        UserSchema, dump_only=True, only=('id', 'first_name', 'last_name', 'email')
+    )
+
+    currency = fields.Nested(GroupCurrencySchema, dump_only=True, only=('id', 'name'))
+    currency_id = fields.Int(required=True, load_only=True, load_from='currency')
+
+    description = fields.Str()
+    date = fields.DateTime()
+
+
 class RecordSchema(Schema):
     id = fields.Int(dump_only=True)
     amount = fields.Float(required=True)
@@ -109,6 +130,12 @@ class RecordSchema(Schema):
 
     currency = fields.Nested(GroupCurrencySchema, dump_only=True, only=('id', 'name'))
     currency_id = fields.Int(required=True, load_only=True, load_from='currency')
+
+    transaction = fields.Nested(
+        TransactionSchema,
+        dump_only=True,
+        only=('id', 'source_account', 'target_account', 'amount', 'currency')
+    )
 
     category = fields.Nested(
         GroupCategorySchema, dump_only=True, only=('id', 'name', 'logo', 'colour')

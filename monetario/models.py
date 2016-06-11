@@ -17,6 +17,7 @@ from monetario.serializers import GroupCategorySchema
 from monetario.serializers import GroupCurrencySchema
 from monetario.serializers import AccountSchema
 from monetario.serializers import RecordSchema
+from monetario.serializers import TransactionSchema
 
 
 record_tag_table = db.Table(
@@ -288,6 +289,47 @@ class Account(db.Model):
         return result
 
 
+class Transaction(db.Model):
+    __tablename__ = 'transaction'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user = db.relationship(User, backref='transactions')
+
+    source_account_id = db.Column(db.Integer, db.ForeignKey('account.id'), index=True)
+    source_account = db.relationship('Account', foreign_keys=[source_account_id])
+
+    target_account_id = db.Column(db.Integer, db.ForeignKey('account.id'), index=True)
+    target_account = db.relationship('Account', foreign_keys=[target_account_id])
+
+    amount = db.Column(db.Numeric(13, 4))
+
+    currency_id = db.Column(db.Integer, db.ForeignKey('group_currency.id'), index=True)
+    currency = db.relationship(GroupCurrency, backref='transactions')
+
+    description = db.Column(db.Text, index=True)
+    date = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, index=True)
+
+    def __repr__(self):
+        return '{}_{}_{}'.format(self.source_account_id, self.target_account_id, self.amount)
+
+    @property
+    def resource_url(self):
+        return url_for('api.v1.get_transaction', transaction_id=self.id, _external=True)
+
+    def to_json(self, exclude=None):
+        schema = TransactionSchema()
+        result = schema.dump(self)
+        return result
+
+    @staticmethod
+    def from_json(data, partial=False):
+        schema = TransactionSchema()
+        result = schema.load(data, partial=partial)
+        return result
+
+
 class Record(db.Model):
     __tablename__ = 'record'
 
@@ -326,10 +368,13 @@ class Record(db.Model):
     payment_method = db.Column(
         db.Integer, default=PAYMENT_METHOD_DEBIT_CARD
     )  # cash, debet card, mobile, internet payment
-    date = db.Column(db.DateTime(timezone=True), default=datetime.utcnow(), index=True)
+    date = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, index=True)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user = db.relationship(User, backref='records')
+
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transaction.id'), index=True)
+    transaction = db.relationship(Transaction, backref='records')
 
     account_id = db.Column(db.Integer, db.ForeignKey('account.id'), index=True)
     account = db.relationship(Account, backref='records')

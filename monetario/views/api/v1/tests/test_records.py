@@ -10,6 +10,7 @@ from monetario.views.api.v1.tests.fixtures import AccountFactory
 from monetario.views.api.v1.tests.fixtures import GroupCurrencyFactory
 from monetario.views.api.v1.tests.fixtures import GroupCategoryFactory
 from monetario.views.api.v1.tests.fixtures import UserFactory
+from monetario.views.api.v1.tests.fixtures import TransactionFactory
 from monetario.views.api.v1.tests.fixtures import RecordFactory
 from monetario.tests import BaseTestCase
 
@@ -40,6 +41,19 @@ class RecordsTest(BaseTestCase):
 
         db.session.commit()
 
+        self.source_account1 = AccountFactory.create()
+        db.session.add(self.source_account1)
+
+        self.target_account1 = AccountFactory.create()
+        db.session.add(self.target_account1)
+
+        self.transaction = TransactionFactory(
+            source_account=self.source_account1,
+            target_account=self.target_account1,
+            user=self.user,
+            currency=self.currency
+        )
+
         self.records = sorted(RecordFactory.create_batch(30), key=lambda x: x.date)
         for record in self.records:
             record.account = self.account
@@ -49,6 +63,20 @@ class RecordsTest(BaseTestCase):
 
             db.session.add(record)
         db.session.commit()
+
+        self.source_record1 = RecordFactory.create(
+            record_type=Record.RECORD_TYPE_EXPENSE,
+            transaction_id=self.transaction.id,
+            user=self.user
+        )
+        db.session.add(self.source_record1)
+
+        self.target_record1 = RecordFactory.create(
+            record_type=Record.RECORD_TYPE_INCOME,
+            transaction_id=self.transaction.id,
+            user=self.user
+        )
+        db.session.add(self.target_record1)
 
         self.api_app = self.create_api_app(self.user)
         self.token = self.get_token(self.api_app, self.user)
@@ -294,6 +322,28 @@ class RecordsTest(BaseTestCase):
         self.assertIn('errors', data)
         self.assertIn('account', data['errors'])
         self.assertIn('Account with this id does not exist', data['errors']['account'])
+
+    def test_update_record_transaction(self):
+
+        response = self.client.put(
+            url_for('api.v1.edit_record', record_id=self.source_record1.id),
+            data=json.dumps({
+                'amount': 100,
+                'record_type': Record.RECORD_TYPE_EXPENSE,
+                'currency': self.currency.id,
+                'account': self.account.id,
+                'category': self.category.id,
+            }),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
+        )
+        self.assertEqual(response.status_code, 400)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('errors', data)
+        self.assertIn('record', data['errors'])
+        self.assertIn('Can not change transactional record.', data['errors']['record'])
 
     def test_update_record_wrong_token(self):
         response = self.client.put(

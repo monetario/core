@@ -29,8 +29,8 @@ def get_records():
             db.contains_eager(Record.currency)
         )
         .join(Account, Account.id == Record.account_id)
-        .join(GroupCategory, GroupCategory.id == Record.category_id)
         .join(GroupCurrency, GroupCurrency.id == Record.currency_id)
+        .outerjoin(GroupCategory, GroupCategory.id == Record.category_id)
         .filter(Record.user_id == current_user.id)
     )
 
@@ -47,8 +47,8 @@ def get_record(record_id):
             db.contains_eager(Record.currency)
         )
         .join(Account, Account.id == Record.account_id)
-        .join(GroupCategory, GroupCategory.id == Record.category_id)
         .join(GroupCurrency, GroupCurrency.id == Record.currency_id)
+        .outerjoin(GroupCategory, GroupCategory.id == Record.category_id)
         .filter(Record.id == record_id, Record.user_id == current_user.id)
         .first_or_404()
     )
@@ -121,6 +121,9 @@ def edit_record(record_id):
 
     if record_schema.errors:
         return {'errors': record_schema.errors}, 400
+
+    if record.transaction_id:
+        return {'errors': {'record': 'Can not change transactional record.'}}, 400
 
     record_data = record_schema.data
 

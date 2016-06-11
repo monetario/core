@@ -6,9 +6,12 @@ from pytz import UTC
 
 import factory
 import pycountry
+from factory.alchemy import SQLAlchemyModelFactory
 from factory.fuzzy import FuzzyDecimal
 from factory.fuzzy import FuzzyDateTime
 from factory.fuzzy import FuzzyText
+
+from monetario.app import db
 
 from monetario.models import Group
 from monetario.models import User
@@ -18,6 +21,7 @@ from monetario.models import GroupCurrency
 from monetario.models import Account
 from monetario.models import App
 from monetario.models import Record
+from monetario.models import Transaction
 
 
 class GroupFactory(factory.Factory):
@@ -78,6 +82,14 @@ class RecordFactory(factory.Factory):
         datetime.datetime(2008, 1, 1, 0, 0, tzinfo=UTC),
         datetime.datetime(2016, 1, 1, 0, 0, tzinfo=UTC)
     )
+
+
+class TransactionFactory(SQLAlchemyModelFactory):
+    class Meta:
+        model = Transaction
+        sqlalchemy_session = db.session
+
+    amount = FuzzyDecimal(10, 10000, 2)
 
 
 class AppFactory(factory.Factory):
