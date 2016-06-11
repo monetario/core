@@ -157,14 +157,14 @@ class Category(db.Model):
 
     (
         CATEGORY_TYPE_INCOME,
-        CATEGORY_TYPE_OUTCOME,
+        CATEGORY_TYPE_EXPENSE,
     ) = range(2)
 
-    CATEGORY_TYPES = [(CATEGORY_TYPE_INCOME, 'Income'), (CATEGORY_TYPE_OUTCOME, 'Outcome')]
+    CATEGORY_TYPES = [(CATEGORY_TYPE_INCOME, 'Income'), (CATEGORY_TYPE_EXPENSE, 'Expense')]
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True)
-    category_type = db.Column(db.Integer, default=CATEGORY_TYPE_OUTCOME)  # income or outcome
+    category_type = db.Column(db.Integer, default=CATEGORY_TYPE_EXPENSE)  # income or expense
     parent_id = db.Column(db.Integer, db.ForeignKey('category.id'), index=True)
     parent = db.relationship('Category', remote_side=[id])
     colour = db.Column(db.String(64), index=True)
@@ -193,12 +193,12 @@ class GroupCategory(db.Model):
     __tablename__ = 'group_category'
 
     CATEGORY_TYPE_INCOME = Category.CATEGORY_TYPE_INCOME
-    CATEGORY_TYPE_OUTCOME = Category.CATEGORY_TYPE_OUTCOME
+    CATEGORY_TYPE_EXPENSE = Category.CATEGORY_TYPE_EXPENSE
     CATEGORY_TYPES = Category.CATEGORY_TYPES
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), index=True)
-    category_type = db.Column(db.Integer)  # income or outcome
+    category_type = db.Column(db.Integer)  # income or expense
     parent_id = db.Column(db.Integer, db.ForeignKey('group_category.id'), index=True)
     parent = db.relationship('GroupCategory', remote_side=[id])
 
