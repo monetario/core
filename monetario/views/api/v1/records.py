@@ -78,7 +78,10 @@ def add_record():
         return {'errors': record_schema.errors}, 400
 
     record_data = record_schema.data
-    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
+    if record_data['record_type'] == Record.RECORD_TYPE_EXPENSE and record_data['amount'] > 0:
+        record_data['amount'] = 0 - record_data['amount']
+
+    if record_data['record_type'] == Record.RECORD_TYPE_INCOME and record_data['amount'] < 0:
         record_data['amount'] = 0 - record_data['amount']
 
     account = Account.query.filter(Account.id == record_data['account_id']).first()
@@ -127,7 +130,10 @@ def edit_record(record_id):
 
     record_data = record_schema.data
 
-    if record_data['record_type'] != Record.RECORD_TYPE_INCOME and record_data['amount'] > 0:
+    if record_data['record_type'] == Record.RECORD_TYPE_EXPENSE and record_data['amount'] > 0:
+        record_data['amount'] = 0 - record_data['amount']
+
+    if record_data['record_type'] == Record.RECORD_TYPE_INCOME and record_data['amount'] < 0:
         record_data['amount'] = 0 - record_data['amount']
 
     if 'account_id' in record_data:
