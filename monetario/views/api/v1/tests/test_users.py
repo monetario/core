@@ -270,6 +270,40 @@ class UsersTest(BaseTestCase):
         )
         self.assertEqual(response.status_code, 401)
 
+    def test_get_current_user(self):
+        response = self.client.get(
+            url_for('api.v1.get_current_user'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.data.decode('utf-8'))
+
+        self.assertIn('id', data)
+        self.assertIn('active', data)
+        self.assertIn('email', data)
+        self.assertIn('first_name', data)
+        self.assertIn('last_name', data)
+        self.assertIn('group', data)
+        self.assertIn('date_created', data)
+        self.assertIn('date_modified', data)
+
+        self.assertEqual(data['first_name'], self.user.first_name)
+        self.assertEqual(data['last_name'], self.user.last_name)
+        self.assertEqual(data['email'], self.user.email)
+        self.assertEqual(data['active'], self.user.active)
+        self.assertEqual(data['active'], self.user.active)
+        self.assertEqual(data['active'], self.user.active)
+
+    def test_get_current_users_wrong_token(self):
+        response = self.client.get(
+            url_for('api.v1.get_current_user'),
+            content_type='application/json',
+            headers={'Authentication-Token': self.token + 'w'}
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_get_users(self):
         per_page = 10
         response = self.client.get(

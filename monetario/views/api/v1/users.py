@@ -3,6 +3,7 @@ import json
 import uuid
 
 from flask import request
+from flask_login import current_user
 from flask_login import login_required
 
 from monetario.models import db
@@ -37,6 +38,13 @@ def get_user(user_id):
         .filter(User.id == user_id)
         .first_or_404()
     )
+
+
+@bp.route('/users/current/', methods=['GET'])
+@login_required
+@jsonify()
+def get_current_user():
+    return current_user
 
 
 @bp.route('/users/<int:user_id>/', methods=['DELETE'])
